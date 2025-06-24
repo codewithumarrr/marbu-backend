@@ -5,7 +5,13 @@ const prisma = require('../config/database');
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: '1d'
+    expiresIn: '15m'
+  });
+};
+
+const signRefreshToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_REFRESH_SECRET, {
+    expiresIn: '7d'
   });
 };
 
@@ -45,11 +51,13 @@ const register = async (req, res, next) => {
       }
     });
 
-    const token = signToken(user.id);
+    const accessToken = signToken(user.id);
+    const refreshToken = signRefreshToken(user.id);
 
     res.status(201).json({
       status: 'success',
-      token,
+      accessToken,
+      refreshToken,
       data: { user }
     });
   } catch (error) {
@@ -73,11 +81,41 @@ const login = async (req, res, next) => {
       return next(new AppError('Incorrect email or password', 401));
     }
 
-    const token = signToken(user.id);
+    const accessToken = signToken(user.id);
+// Refresh token endpoint
+const refreshTokenHandler = async (req, res, next) => {
+  try {
+    const { refreshToken: refreshTokenValue } = req.body;
+    if (!refreshTokenValue) {
+      return next(new AppError('Refresh token required', 400));
+    }
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshTokenValue, process.env.JWT_REFRESH_SECRET);
+    } catch (err) {
+      return next(new AppError('Invalid or expired refresh token', 401));
+    }
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id }
+    });
+    if (!user) {
+      return next(new AppError('User not found', 404));
+    }
+    const accessToken = signToken(user.id);
+    res.status(200).json({
+      status: 'success',
+      accessToken
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+    const refreshToken = signRefreshToken(user.id);
 
     res.status(200).json({
       status: 'success',
-      token
+      accessToken,
+      refreshToken
     });
   } catch (error) {
     next(error);

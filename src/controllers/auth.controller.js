@@ -1,36 +1,47 @@
+const bcrypt = require('bcryptjs');
 const { AppError } = require('../middleware/errorHandler');
 const {
   signToken,
   signRefreshToken,
-  findUserByEmail,
+  findUserByEmployeeNumber,
   findUserById,
   createUser,
   comparePassword
 } = require('../services/auth.service');
 const { userToDTO } = require('../dto/user.dto');
+const prisma = require('../config/database');
 
 
 const register = async (req, res, next) => {
   try {
-    const { employeeNumber, name, email, password, role } = req.body;
+    const { employeeNumber, name, password, role, mobile_number, site_id } = req.body;
 
-    // Check for existing user by email
-    const existingUser = await findUserByEmail(email);
+    // Check for existing user by employee number
+    const existingUser = await findUserByEmployeeNumber(employeeNumber);
     if (existingUser) {
-      return next(new AppError('User already exists with this email', 400));
+      return next(new AppError('User already exists with this employee number', 400));
     }
 
     // Create user
+    // Find role_id from role name
+    const roleRecord = await prisma.roles.findFirst({
+      where: { role_name: role }
+    });
+    if (!roleRecord) {
+      return next(new AppError('Invalid role', 400));
+    }
+
     const user = await createUser({
-      employeeNumber,
-      name,
-      email,
+      employee_number: employeeNumber,
+      employee_name: name,
       password,
-      role
+      role_id: roleRecord.role_id,
+      mobile_number,
+      site_id
     });
 
-    const accessToken = signToken(user.id);
-    const refreshToken = signRefreshToken(user.id);
+    const accessToken = signToken(user.employee_id);
+    const refreshToken = signRefreshToken(user.employee_id);
 
     res.status(201).json({
       status: 'success',
@@ -45,21 +56,26 @@ const register = async (req, res, next) => {
 
 const login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { employee_number, password } = req.body;
 
-    if (!email || !password) {
-      return next(new AppError('Please provide email and password', 400));
+    if (!employee_number || !password) {
+      return next(new AppError('Please provide employee number and password', 400));
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email }
-    });
+    const user = await findUserByEmployeeNumber(employee_number);
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      return next(new AppError('Incorrect email or password', 401));
+    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+      return next(new AppError('Incorrect employee number or password', 401));
     }
 
-    const accessToken = signToken(user.id);
+    const accessToken = signToken(user.employee_id);
+const loginRefreshToken = signRefreshToken(user.employee_id);
+
+res.status(200).json({
+  status: 'success',
+  accessToken,
+  refreshToken: loginRefreshToken
+});
 // Refresh token endpoint
 const refreshTokenHandler = async (req, res, next) => {
   try {
@@ -135,7 +151,6 @@ const getProfile = async (req, res, next) => {
         id: true,
         employeeNumber: true,
         name: true,
-        email: true,
         role: true
       }
     });
@@ -151,11 +166,10 @@ const getProfile = async (req, res, next) => {
 
 const updateProfile = async (req, res, next) => {
   try {
-    const { name, email, currentPassword, newPassword } = req.body;
+    const { name, currentPassword, newPassword } = req.body;
     
     const updateData = {};
     if (name) updateData.name = name;
-    if (email) updateData.email = email;
 
     if (newPassword) {
       if (!currentPassword) {
@@ -180,7 +194,6 @@ const updateProfile = async (req, res, next) => {
         id: true,
         employeeNumber: true,
         name: true,
-        email: true,
         role: true
       }
     });

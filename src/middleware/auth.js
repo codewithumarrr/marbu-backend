@@ -18,13 +18,17 @@ const protect = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // 3) Check if user still exists
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.id },
+    const user = await prisma.users.findUnique({
+      where: { employee_id: decoded.employee_id },
       select: {
-        id: true,
-        email: true,
-        role: true,
-        employeeNumber: true
+        employee_id: true,
+        role_id: true,
+        employee_number: true,
+        roles: {
+          select: {
+            role_name: true
+          }
+        }
       }
     });
 

@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 async function main() {
@@ -24,10 +25,11 @@ async function main() {
 
   // Seed users
   const roleRecords = await prisma.roles.findMany();
+  const adminPassword = await bcrypt.hash('admin123', 10);
   const usersData = [
     {
       employee_number: 'EMP001',
-      password_hash: 'hashedpass1',
+      password_hash: adminPassword,
       employee_name: 'Alice Admin',
       mobile_number: '03001234567',
       role_id: roleRecords[0].role_id,
@@ -35,7 +37,7 @@ async function main() {
     },
     {
       employee_number: 'EMP002',
-      password_hash: 'hashedpass2',
+      password_hash: await bcrypt.hash('manager123', 10),
       employee_name: 'Bob Manager',
       mobile_number: '03007654321',
       role_id: roleRecords[1].role_id,
@@ -43,7 +45,7 @@ async function main() {
     },
     {
       employee_number: 'EMP003',
-      password_hash: 'hashedpass3',
+      password_hash: await bcrypt.hash('keeper123', 10),
       employee_name: 'Charlie Keeper',
       mobile_number: '03009876543',
       role_id: roleRecords[2].role_id,

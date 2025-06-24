@@ -1,0 +1,124 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Fleet Management API",
+    "version": "1.0.0",
+    "description": "API documentation for the Fleet Management System"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4000",
+      "description": "Local server"
+    }
+  ],
+  "paths": {
+    "/api/v1/users": {
+      "get": { "summary": "Get all users", "responses": { "200": { "description": "A list of users" } } },
+      "post": { "summary": "Create a new user", "responses": { "201": { "description": "User created" } } }
+    },
+    "/api/v1/users/{id}": {
+      "get": { "summary": "Get user by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "User found" }, "404": { "description": "Not found" } } },
+      "put": { "summary": "Update user by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "User updated" }, "404": { "description": "Not found" } } },
+      "delete": { "summary": "Delete user by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "204": { "description": "User deleted" }, "404": { "description": "Not found" } } }
+    },
+    "/api/v1/roles": {
+      "get": { "summary": "Get all roles", "responses": { "200": { "description": "A list of roles" } } },
+      "post": { "summary": "Create a new role", "responses": { "201": { "description": "Role created" } } }
+    },
+    "/api/v1/roles/{id}": {
+      "get": { "summary": "Get role by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Role found" }, "404": { "description": "Not found" } } },
+      "put": { "summary": "Update role by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Role updated" }, "404": { "description": "Not found" } } },
+      "delete": { "summary": "Delete role by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "204": { "description": "Role deleted" }, "404": { "description": "Not found" } } }
+    },
+    "/api/v1/sites": {
+      "get": { "summary": "Get all sites", "responses": { "200": { "description": "A list of sites" } } },
+      "post": { "summary": "Create a new site", "responses": { "201": { "description": "Site created" } } }
+    },
+    "/api/v1/sites/{id}": {
+      "get": { "summary": "Get site by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Site found" }, "404": { "description": "Not found" } } },
+      "put": { "summary": "Update site by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Site updated" }, "404": { "description": "Not found" } } },
+      "delete": { "summary": "Delete site by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "204": { "description": "Site deleted" }, "404": { "description": "Not found" } } }
+    },
+    "/api/v1/tanks": {
+      "get": { "summary": "Get all tanks", "responses": { "200": { "description": "A list of tanks" } } },
+      "post": { "summary": "Create a new tank", "responses": { "201": { "description": "Tank created" } } }
+    },
+    "/api/v1/tanks/{id}": {
+      "get": { "summary": "Get tank by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Tank found" }, "404": { "description": "Not found" } } },
+      "put": { "summary": "Update tank by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Tank updated" }, "404": { "description": "Not found" } } },
+      "delete": { "summary": "Delete tank by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "204": { "description": "Tank deleted" }, "404": { "description": "Not found" } } }
+    },
+    "/api/v1/suppliers": {
+      "get": { "summary": "Get all suppliers", "responses": { "200": { "description": "A list of suppliers" } } },
+      "post": { "summary": "Create a new supplier", "responses": { "201": { "description": "Supplier created" } } }
+    },
+    "/api/v1/suppliers/{id}": {
+      "get": { "summary": "Get supplier by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Supplier found" }, "404": { "description": "Not found" } } },
+      "put": { "summary": "Update supplier by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Supplier updated" }, "404": { "description": "Not found" } } },
+      "delete": { "summary": "Delete supplier by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "204": { "description": "Supplier deleted" }, "404": { "description": "Not found" } } }
+    },
+    "/api/v1/vehicles-equipment": {
+      "get": { "summary": "Get all vehicles/equipment", "responses": { "200": { "description": "A list of vehicles/equipment" } } },
+      "post": { "summary": "Create a new vehicle/equipment", "responses": { "201": { "description": "Vehicle/Equipment created" } } }
+    },
+    "/api/v1/vehicles-equipment/{id}": {
+      "get": { "summary": "Get vehicle/equipment by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Vehicle/Equipment found" }, "404": { "description": "Not found" } } },
+      "put": { "summary": "Update vehicle/equipment by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Vehicle/Equipment updated" }, "404": { "description": "Not found" } } },
+      "delete": { "summary": "Delete vehicle/equipment by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "204": { "description": "Vehicle/Equipment deleted" }, "404": { "description": "Not found" } } }
+    },
+    "/api/v1/jobs-projects": {
+      "get": { "summary": "Get all jobs/projects", "responses": { "200": { "description": "A list of jobs/projects" } } },
+      "post": { "summary": "Create a new job/project", "responses": { "201": { "description": "Job/Project created" } } }
+    },
+    "/api/v1/jobs-projects/{id}": {
+      "get": { "summary": "Get job/project by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Job/Project found" }, "404": { "description": "Not found" } } },
+      "put": { "summary": "Update job/project by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Job/Project updated" }, "404": { "description": "Not found" } } },
+      "delete": { "summary": "Delete job/project by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "204": { "description": "Job/Project deleted" }, "404": { "description": "Not found" } } }
+    },
+    "/api/v1/diesel-receiving": {
+      "get": { "summary": "Get all diesel receiving records", "responses": { "200": { "description": "A list of diesel receiving records" } } },
+      "post": { "summary": "Create a new diesel receiving record", "responses": { "201": { "description": "Diesel receiving record created" } } }
+    },
+    "/api/v1/diesel-receiving/{id}": {
+      "get": { "summary": "Get diesel receiving record by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Diesel receiving record found" }, "404": { "description": "Not found" } } },
+      "put": { "summary": "Update diesel receiving record by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Diesel receiving record updated" }, "404": { "description": "Not found" } } },
+      "delete": { "summary": "Delete diesel receiving record by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "204": { "description": "Diesel receiving record deleted" }, "404": { "description": "Not found" } } }
+    },
+    "/api/v1/diesel-consumption": {
+      "get": { "summary": "Get all diesel consumption records", "responses": { "200": { "description": "A list of diesel consumption records" } } },
+      "post": { "summary": "Create a new diesel consumption record", "responses": { "201": { "description": "Diesel consumption record created" } } }
+    },
+    "/api/v1/diesel-consumption/{id}": {
+      "get": { "summary": "Get diesel consumption record by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Diesel consumption record found" }, "404": { "description": "Not found" } } },
+      "put": { "summary": "Update diesel consumption record by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Diesel consumption record updated" }, "404": { "description": "Not found" } } },
+      "delete": { "summary": "Delete diesel consumption record by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "204": { "description": "Diesel consumption record deleted" }, "404": { "description": "Not found" } } }
+    },
+    "/api/v1/invoices": {
+      "get": { "summary": "Get all invoices", "responses": { "200": { "description": "A list of invoices" } } },
+      "post": { "summary": "Create a new invoice", "responses": { "201": { "description": "Invoice created" } } }
+    },
+    "/api/v1/invoices/{id}": {
+      "get": { "summary": "Get invoice by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Invoice found" }, "404": { "description": "Not found" } } },
+      "put": { "summary": "Update invoice by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Invoice updated" }, "404": { "description": "Not found" } } },
+      "delete": { "summary": "Delete invoice by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "204": { "description": "Invoice deleted" }, "404": { "description": "Not found" } } }
+    },
+    "/api/v1/invoice-items": {
+      "get": { "summary": "Get all invoice items", "responses": { "200": { "description": "A list of invoice items" } } },
+      "post": { "summary": "Create a new invoice item", "responses": { "201": { "description": "Invoice item created" } } }
+    },
+    "/api/v1/invoice-items/{id}": {
+      "get": { "summary": "Get invoice item by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Invoice item found" }, "404": { "description": "Not found" } } },
+      "put": { "summary": "Update invoice item by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Invoice item updated" }, "404": { "description": "Not found" } } },
+      "delete": { "summary": "Delete invoice item by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "204": { "description": "Invoice item deleted" }, "404": { "description": "Not found" } } }
+    },
+    "/api/v1/audit-log": {
+      "get": { "summary": "Get all audit log entries", "responses": { "200": { "description": "A list of audit log entries" } } },
+      "post": { "summary": "Create a new audit log entry", "responses": { "201": { "description": "Audit log entry created" } } }
+    },
+    "/api/v1/audit-log/{id}": {
+      "get": { "summary": "Get audit log entry by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Audit log entry found" }, "404": { "description": "Not found" } } },
+      "put": { "summary": "Update audit log entry by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Audit log entry updated" }, "404": { "description": "Not found" } } },
+      "delete": { "summary": "Delete audit log entry by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "204": { "description": "Audit log entry deleted" }, "404": { "description": "Not found" } } }
+    }
+  }
+}

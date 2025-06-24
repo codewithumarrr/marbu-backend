@@ -1,0 +1,47 @@
+# Node modules
+node_modules/
+
+# Environment variables
+.env.development
+.env.test
+.env.production
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+jest-test-results.json
+
+# Prisma
+prisma/dev.db
+prisma/dev.sqlite
+prisma/migrations/
+*.sqlite
+
+# Build output
+dist/
+build/
+
+# OS & editor files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.sw?
+
+# Debugging
+.nyc_output/
+.debug/
+
+# Optional npm cache directory
+.npm/
+
+# Optional eslint cache
+.eslintcache

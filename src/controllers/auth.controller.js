@@ -1,54 +1,32 @@
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const { AppError } = require('../middleware/errorHandler');
-const prisma = require('../config/database');
+const {
+  signToken,
+  signRefreshToken,
+  findUserByEmail,
+  findUserById,
+  createUser,
+  comparePassword
+} = require('../services/auth.service');
+const { userToDTO } = require('../dto/user.dto');
 
-const signToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: '15m'
-  });
-};
-
-const signRefreshToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_REFRESH_SECRET, {
-    expiresIn: '7d'
-  });
-};
 
 const register = async (req, res, next) => {
   try {
     const { employeeNumber, name, email, password, role } = req.body;
 
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email },
-          { employeeNumber }
-        ]
-      }
-    });
-
+    // Check for existing user by email
+    const existingUser = await findUserByEmail(email);
     if (existingUser) {
-      return next(new AppError('User already exists with this email or employee number', 400));
+      return next(new AppError('User already exists with this email', 400));
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    const user = await prisma.user.create({
-      data: {
-        employeeNumber,
-        name,
-        email,
-        password: hashedPassword,
-        role
-      },
-      select: {
-        id: true,
-        employeeNumber: true,
-        name: true,
-        email: true,
-        role: true
-      }
+    // Create user
+    const user = await createUser({
+      employeeNumber,
+      name,
+      email,
+      password,
+      role
     });
 
     const accessToken = signToken(user.id);
@@ -58,7 +36,7 @@ const register = async (req, res, next) => {
       status: 'success',
       accessToken,
       refreshToken,
-      data: { user }
+      data: { user: userToDTO(user) }
     });
   } catch (error) {
     next(error);
@@ -95,9 +73,7 @@ const refreshTokenHandler = async (req, res, next) => {
     } catch (err) {
       return next(new AppError('Invalid or expired refresh token', 401));
     }
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.id }
-    });
+    const user = await findUserById(decoded.id);
     if (!user) {
       return next(new AppError('User not found', 404));
     }
@@ -121,6 +97,35 @@ const refreshTokenHandler = async (req, res, next) => {
     next(error);
   }
 };
+// Refresh token endpoint
+const refreshTokenHandler = async (req, res, next) => {
+  try {
+    const { refreshToken: refreshTokenValue } = req.body;
+    if (!refreshTokenValue) {
+      return next(new AppError('Refresh token required', 400));
+    }
+    let decoded;
+    try {
+      decoded = require('jsonwebtoken').verify(
+        refreshTokenValue,
+        process.env.JWT_REFRESH_SECRET
+      );
+    } catch (err) {
+      return next(new AppError('Invalid or expired refresh token', 401));
+    }
+    const user = await findUserById(decoded.id);
+    if (!user) {
+      return next(new AppError('User not found', 404));
+    }
+    const accessToken = signToken(user.id);
+    res.status(200).json({
+      status: 'success',
+      accessToken
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 const getProfile = async (req, res, next) => {
   try {
@@ -137,7 +142,7 @@ const getProfile = async (req, res, next) => {
 
     res.status(200).json({
       status: 'success',
-      data: { user }
+      data: { user: userToDTO(user) }
     });
   } catch (error) {
     next(error);
@@ -193,5 +198,6 @@ module.exports = {
   register,
   login,
   getProfile,
-  updateProfile
+  updateProfile,
+  refreshTokenHandler
 };

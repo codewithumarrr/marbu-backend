@@ -1,5 +1,8 @@
 const express = require('express');
 const { protect, restrictTo } = require('../middleware/auth');
+const { requireRole } = require('../utils/roleUtils');
+const joiValidate = require('../middleware/joiValidate');
+const { createVehicleSchema, updateVehicleSchema } = require('../validation/vehicle.validation');
 const { validate,
   createVehicleValidation,
   createMaintenanceValidation,
@@ -24,20 +27,17 @@ const {
 
 const router = express.Router();
 
-// Protect all routes
-router.use(protect);
+router.use(protect, requireRole('admin', 'site-manager'));
 
 // Vehicle Management
-router.post('/vehicles', 
-  restrictTo('ADMIN', 'MANAGER'),
-  validate(createVehicleValidation),
+router.post('/vehicles',
+  joiValidate(createVehicleSchema),
   createVehicle
 );
 router.get('/vehicles', getVehicles);
 router.get('/vehicles/:id', getVehicle);
 router.patch('/vehicles/:id',
-  restrictTo('ADMIN', 'MANAGER'),
-  validate(createVehicleValidation),
+  joiValidate(updateVehicleSchema),
   updateVehicle
 );
 

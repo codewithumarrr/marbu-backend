@@ -1,6 +1,10 @@
 // src/routes/roles.routes.js
 
 const express = require('express');
+const joiValidate = require('../middleware/joiValidate');
+const { createRoleSchema, updateRoleSchema } = require('../validation/role.validation');
+const { requireRole } = require('../utils/roleUtils');
+const { protect } = require('../middleware/auth');
 const {
   createRole,
   getAllRoles,
@@ -11,10 +15,12 @@ const {
 
 const router = express.Router();
 
-router.post('/', createRole);
+router.use(protect, requireRole('admin'));
+
+router.post('/', joiValidate(createRoleSchema), createRole);
 router.get('/', getAllRoles);
 router.get('/:id', getRoleById);
-router.put('/:id', updateRole);
+router.put('/:id', joiValidate(updateRoleSchema), updateRole);
 router.delete('/:id', deleteRole);
 
 module.exports = router;

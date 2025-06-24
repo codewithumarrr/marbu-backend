@@ -1,6 +1,10 @@
 // src/routes/tanks.routes.js
 
 const express = require('express');
+const joiValidate = require('../middleware/joiValidate');
+const { createTankSchema, updateTankSchema } = require('../validation/tank.validation');
+const { requireRole } = require('../utils/roleUtils');
+const { protect } = require('../middleware/auth');
 const {
   createTank,
   getAllTanks,
@@ -11,10 +15,12 @@ const {
 
 const router = express.Router();
 
-router.post('/', createTank);
+router.use(protect, requireRole('admin', 'site-manager'));
+
+router.post('/', joiValidate(createTankSchema), createTank);
 router.get('/', getAllTanks);
 router.get('/:id', getTankById);
-router.put('/:id', updateTank);
+router.put('/:id', joiValidate(updateTankSchema), updateTank);
 router.delete('/:id', deleteTank);
 
 module.exports = router;

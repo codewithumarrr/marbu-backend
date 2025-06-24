@@ -1,6 +1,7 @@
 const express = require('express');
 const { protect } = require('../middleware/auth');
-const { validate, registerValidation, loginValidation } = require('../middleware/validate');
+const joiValidate = require('../middleware/joiValidate');
+const { registerSchema, loginSchema } = require('../validation/auth.validation');
 const { requireRole } = require('../utils/roleUtils');
 const {
   register,
@@ -12,8 +13,8 @@ const {
 
 const router = express.Router();
 
-router.post('/register', protect, requireRole('admin'), validate(registerValidation), register);
-router.post('/login', validate(loginValidation), login);
+router.post('/register', protect, requireRole('admin'), joiValidate(registerSchema), register);
+router.post('/login', joiValidate(loginSchema), login);
 router.get('/profile', protect, getProfile);
 router.patch('/profile', protect, updateProfile);
 

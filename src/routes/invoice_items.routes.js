@@ -1,6 +1,8 @@
 // src/routes/invoice_items.routes.js
 
 const express = require('express');
+const joiValidate = require('../middleware/joiValidate');
+const { createInvoiceItemSchema, updateInvoiceItemSchema } = require('../validation/invoice_items.validation');
 const {
   createInvoiceItem,
   getAllInvoiceItems,
@@ -11,10 +13,10 @@ const {
 
 const router = express.Router();
 
-router.post('/', createInvoiceItem);
+router.post('/', joiValidate(createInvoiceItemSchema), createInvoiceItem);
 router.get('/', getAllInvoiceItems);
 router.get('/:id', getInvoiceItemById);
-router.put('/:id', updateInvoiceItem);
+router.put('/:id', joiValidate(updateInvoiceItemSchema), updateInvoiceItem);
 router.delete('/:id', deleteInvoiceItem);
 
 module.exports = router;

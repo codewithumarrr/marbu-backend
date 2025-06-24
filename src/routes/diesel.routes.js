@@ -1,5 +1,7 @@
 const express = require('express');
 const { protect, restrictTo } = require('../middleware/auth');
+const joiValidate = require('../middleware/joiValidate');
+const { createDieselSchema } = require('../validation/diesel.validation');
 const { validate,
   createSiteValidation,
   createTankValidation,
@@ -56,7 +58,7 @@ router.get('/vehicles', getVehicles);
 // Diesel Receiving
 router.post('/receiving',
   restrictTo('ADMIN', 'SITE_MANAGER', 'STORE_KEEPER'),
-  validate(createDieselReceivingValidation),
+  joiValidate(createDieselSchema),
   createDieselReceiving
 );
 router.get('/receiving',

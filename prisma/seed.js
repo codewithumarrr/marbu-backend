@@ -7,9 +7,10 @@ async function main() {
   const roles = await prisma.roles.createMany({
     data: [
       { role_name: 'admin', description: 'Administrator' },
-      { role_name: 'site-manager', description: 'Site Manager' },
-      { role_name: 'store-keeper', description: 'Store Keeper' },
-      { role_name: 'operator', description: 'Operator' }
+      { role_name: 'site-incharge', description: 'Site Incharge' },
+      { role_name: 'diesel-manager', description: 'Diesel Manager' },
+      { role_name: 'operator', description: 'Operator' },
+      { role_name: 'driver', description: 'Driver' },
     ],
     skipDuplicates: true
   });
@@ -23,7 +24,7 @@ async function main() {
   await prisma.sites.createMany({ data: siteData, skipDuplicates: true });
   const sites = await prisma.sites.findMany();
 
-  // Seed users
+  // Seed users (add a Tank In-charge and Site Manager)
   const roleRecords = await prisma.roles.findMany();
   const adminPassword = await bcrypt.hash('admin123', 10);
   const usersData = [
@@ -32,7 +33,7 @@ async function main() {
       password_hash: adminPassword,
       employee_name: 'Alice Admin',
       mobile_number: '03001234567',
-      role_id: roleRecords[0].role_id,
+      role_id: roleRecords.find(r => r.role_name === 'admin').role_id,
       site_id: sites[0].site_id
     },
     {
@@ -40,7 +41,7 @@ async function main() {
       password_hash: await bcrypt.hash('manager123', 10),
       employee_name: 'Bob Manager',
       mobile_number: '03007654321',
-      role_id: roleRecords[1].role_id,
+      role_id: roleRecords.find(r => r.role_name === 'site-incharge').role_id,
       site_id: sites[1].site_id
     },
     {
@@ -48,8 +49,26 @@ async function main() {
       password_hash: await bcrypt.hash('keeper123', 10),
       employee_name: 'Charlie Keeper',
       mobile_number: '03009876543',
-      role_id: roleRecords[2].role_id,
+      role_id: roleRecords.find(r => r.role_name === 'diesel-manager').role_id,
       site_id: sites[2].site_id
+    },
+    // Tank In-charge for Fuel Receiving
+    {
+      employee_number: 'EMP004',
+      password_hash: await bcrypt.hash('tank123', 10),
+      employee_name: 'Tina TankIncharge',
+      mobile_number: '03009998888',
+      role_id: roleRecords.find(r => r.role_name === 'Tank In-charge').role_id,
+      site_id: sites[0].site_id
+    },
+    // Site Manager for Fuel Receiving
+    {
+      employee_number: 'EMP005',
+      password_hash: await bcrypt.hash('site123', 10),
+      employee_name: 'Sam SiteManager',
+      mobile_number: '03007776666',
+      role_id: roleRecords.find(r => r.role_name === 'Site Manager').role_id,
+      site_id: sites[1].site_id
     }
   ];
   await prisma.users.createMany({ data: usersData, skipDuplicates: true });

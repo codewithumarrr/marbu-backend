@@ -6,11 +6,20 @@ const {
   getAllAuditLogs,
   getAuditLogById,
   updateAuditLog,
-  deleteAuditLog
+  deleteAuditLog,
+  getFilteredAuditLogs,
+  getUsersForAuditFilter,
+  getRecordTypesForAuditFilter
 } = require('../controllers/audit_log.controller');
 
 const router = express.Router();
 
+// Frontend specific endpoints
+router.get('/filtered', getFilteredAuditLogs);
+router.get('/users', getUsersForAuditFilter);
+router.get('/record-types', getRecordTypesForAuditFilter);
+
+// Standard CRUD endpoints
 router.post('/', createAuditLog);
 router.get('/', getAllAuditLogs);
 router.get('/:id', getAuditLogById);

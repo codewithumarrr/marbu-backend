@@ -2,16 +2,30 @@
 
 const express = require('express');
 const {
-  createDieselReceiving,
+  generateInvoiceFromReceiving,
+  createFuelReceiving,
   getAllDieselReceiving,
   getDieselReceivingById,
   updateDieselReceiving,
-  deleteDieselReceiving
+  deleteDieselReceiving,
+  getNextReceiptNumber,
+  getTanksBySite,
+  getTankInchargeEmployees,
+  getActiveSuppliers
 } = require('../controllers/diesel_receiving.controller');
 
 const router = express.Router();
 
-router.post('/', createDieselReceiving);
+// Frontend specific endpoints
+router.get('/next-receipt-number', getNextReceiptNumber);
+router.get('/tanks/:siteId?', getTanksBySite);
+router.get('/employees/tank-incharge', getTankInchargeEmployees);
+router.get('/suppliers/active', getActiveSuppliers);
+router.post('/create', createFuelReceiving);
+
+router.post('/generate-invoice', generateInvoiceFromReceiving);
+
+// Standard CRUD endpoints
 router.get('/', getAllDieselReceiving);
 router.get('/:id', getDieselReceivingById);
 router.put('/:id', updateDieselReceiving);

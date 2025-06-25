@@ -3,6 +3,8 @@ const authRoutes = require('./auth.routes');
 const vehicleRoutes = require('./vehicle.routes');
 const dieselRoutes = require('./diesel.routes');
 const usersRoutes = require('./users.routes');
+const dashboardRoutes = require('./dashboard.routes');
+const reportsRoutes = require('./reports.routes');
 
 const router = express.Router();
 
@@ -11,6 +13,8 @@ router.use('/auth', authRoutes);
 router.use('/vehicles', vehicleRoutes);
 router.use('/diesel', dieselRoutes);
 router.use('/users', usersRoutes);
+router.use('/dashboard', dashboardRoutes);
+router.use('/reports', reportsRoutes);
 router.use('/roles', require('./roles.routes'));
 router.use('/sites', require('./sites.routes'));
 router.use('/tanks', require('./tanks.routes'));

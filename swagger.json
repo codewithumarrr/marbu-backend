@@ -88,7 +88,7 @@
                   "employeeNumber": "EMP004",
                   "name": "New User",
                   "password": "password123",
-                  "role": "site-manager",
+                  "role": "site-incharge",
                   "mobile_number": "03001234567",
                   "site_id": 1
                 }
@@ -185,23 +185,431 @@
       "put": { "summary": "Update job/project by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Job/Project updated" }, "404": { "description": "Not found" } } },
       "delete": { "summary": "Delete job/project by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "204": { "description": "Job/Project deleted" }, "404": { "description": "Not found" } } }
     },
+    "/api/v1/dashboard/stats": {
+      "get": {
+        "summary": "Get dashboard statistics",
+        "description": "Get total fuel received, consumed, current stock, and active jobs count",
+        "responses": {
+          "200": {
+            "description": "Dashboard statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "totalFuelReceived": { "type": "number" },
+                        "totalConsumed": { "type": "number" },
+                        "currentStock": { "type": "number" },
+                        "activeJobs": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dashboard/recent-activity": {
+      "get": {
+        "summary": "Get recent fuel activities",
+        "description": "Get recent fuel consumption activities for dashboard table",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 10 },
+            "description": "Number of records to return"
+          }
+        ],
+        "responses": {
+          "200": { "description": "Recent activities list" }
+        }
+      }
+    },
+    "/api/v1/dashboard/alerts": {
+      "get": {
+        "summary": "Get fuel level alerts",
+        "description": "Get alerts for tanks with low fuel levels",
+        "responses": {
+          "200": { "description": "Fuel level alerts" }
+        }
+      }
+    },
+    "/api/v1/dashboard/tank-stock-levels": {
+      "get": {
+        "summary": "Get tank stock levels",
+        "description": "Get current stock levels for all tanks",
+        "responses": {
+          "200": { "description": "Tank stock levels" }
+        }
+      }
+    },
+    "/api/v1/diesel-receiving/next-receipt-number": {
+      "get": {
+        "summary": "Generate next receipt number",
+        "description": "Auto-generate the next receipt number for fuel receiving",
+        "responses": {
+          "200": {
+            "description": "Next receipt number",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "receiptNumber": { "type": "string", "example": "RCP-2025-001234" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/diesel-receiving/create": {
+      "post": {
+        "summary": "Create fuel receiving record",
+        "description": "Create a new fuel receiving record with frontend form data",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "receiptNumber": { "type": "string" },
+                  "dateTime": { "type": "string", "format": "date-time" },
+                  "quantity": { "type": "number" },
+                  "tankId": { "type": "integer" },
+                  "receivedBy": { "type": "string" },
+                  "supplierId": { "type": "integer" },
+                  "mobileNumber": { "type": "string" },
+                  "notes": { "type": "string" },
+                  "siteId": { "type": "integer" }
+                },
+                "required": ["receiptNumber", "dateTime", "quantity", "tankId", "receivedBy", "supplierId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Fuel receipt recorded successfully" }
+        }
+      }
+    },
+    "/api/v1/diesel-receiving/tanks/{siteId}": {
+      "get": {
+        "summary": "Get tanks by site",
+        "description": "Get tanks with capacity info for dropdown, optionally filtered by site",
+        "parameters": [
+          {
+            "name": "siteId",
+            "in": "path",
+            "required": false,
+            "schema": { "type": "integer" },
+            "description": "Site ID to filter tanks (optional)"
+          }
+        ],
+        "responses": {
+          "200": { "description": "List of tanks with capacity info" }
+        }
+      }
+    },
+    "/api/v1/diesel-receiving/employees/tank-incharge": {
+      "get": {
+        "summary": "Get tank in-charge employees",
+        "description": "Get employees who can receive fuel (tank in-charge, site managers, admins)",
+        "responses": {
+          "200": { "description": "List of tank in-charge employees" }
+        }
+      }
+    },
+    "/api/v1/diesel-receiving/suppliers/active": {
+      "get": {
+        "summary": "Get active suppliers",
+        "description": "Get list of active suppliers for dropdown",
+        "responses": {
+          "200": { "description": "List of active suppliers" }
+        }
+      }
+    },
     "/api/v1/diesel-receiving": {
-      "get": { "summary": "Get all diesel receiving records", "responses": { "200": { "description": "A list of diesel receiving records" } } },
-      "post": { "summary": "Create a new diesel receiving record", "responses": { "201": { "description": "Diesel receiving record created" } } }
+      "get": { "summary": "Get all diesel receiving records", "responses": { "200": { "description": "A list of diesel receiving records" } } }
     },
     "/api/v1/diesel-receiving/{id}": {
       "get": { "summary": "Get diesel receiving record by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Diesel receiving record found" }, "404": { "description": "Not found" } } },
       "put": { "summary": "Update diesel receiving record by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Diesel receiving record updated" }, "404": { "description": "Not found" } } },
       "delete": { "summary": "Delete diesel receiving record by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "204": { "description": "Diesel receiving record deleted" }, "404": { "description": "Not found" } } }
     },
+    "/api/v1/diesel-consumption/create": {
+      "post": {
+        "summary": "Create fuel consumption record",
+        "description": "Create a new fuel consumption record with frontend form data",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "vehicleEquipmentType": { "type": "string" },
+                  "plateNumberMachineId": { "type": "string" },
+                  "dateTime": { "type": "string", "format": "date-time" },
+                  "jobNumber": { "type": "string" },
+                  "operatorName": { "type": "string" },
+                  "operatorMobile": { "type": "string" },
+                  "employeeNumber": { "type": "string" },
+                  "tankSource": { "type": "string" },
+                  "quantity": { "type": "number" },
+                  "odometerReading": { "type": "number" },
+                  "thumbprintData": { "type": "string" },
+                  "siteId": { "type": "integer" }
+                },
+                "required": ["vehicleEquipmentType", "plateNumberMachineId", "dateTime", "jobNumber", "employeeNumber", "quantity", "odometerReading"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Fuel consumption recorded successfully" }
+        }
+      }
+    },
+    "/api/v1/diesel-consumption/vehicle-types": {
+      "get": {
+        "summary": "Get vehicle/equipment types",
+        "description": "Get distinct vehicle/equipment types for dropdown",
+        "responses": {
+          "200": { "description": "List of vehicle/equipment types" }
+        }
+      }
+    },
+    "/api/v1/diesel-consumption/vehicles/{type}": {
+      "get": {
+        "summary": "Get vehicles by type",
+        "description": "Get vehicles/equipment filtered by type",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Vehicle/equipment type"
+          }
+        ],
+        "responses": {
+          "200": { "description": "List of vehicles/equipment of specified type" }
+        }
+      }
+    },
+    "/api/v1/diesel-consumption/jobs/active": {
+      "get": {
+        "summary": "Get active jobs",
+        "description": "Get currently active jobs for dropdown",
+        "responses": {
+          "200": { "description": "List of active jobs" }
+        }
+      }
+    },
+    "/api/v1/diesel-consumption/employees/operators": {
+      "get": {
+        "summary": "Get operator employees",
+        "description": "Get employees who can operate vehicles/equipment",
+        "responses": {
+          "200": { "description": "List of operator/driver employees" }
+        }
+      }
+    },
+    "/api/v1/diesel-consumption/thumbprint": {
+      "post": {
+        "summary": "Save thumbprint data",
+        "description": "Store thumbprint authentication data",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "consumptionId": { "type": "integer" },
+                  "thumbprintData": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Thumbprint saved successfully" }
+        }
+      }
+    },
     "/api/v1/diesel-consumption": {
-      "get": { "summary": "Get all diesel consumption records", "responses": { "200": { "description": "A list of diesel consumption records" } } },
-      "post": { "summary": "Create a new diesel consumption record", "responses": { "201": { "description": "Diesel consumption record created" } } }
+      "get": { "summary": "Get all diesel consumption records", "responses": { "200": { "description": "A list of diesel consumption records" } } }
     },
     "/api/v1/diesel-consumption/{id}": {
       "get": { "summary": "Get diesel consumption record by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Diesel consumption record found" }, "404": { "description": "Not found" } } },
       "put": { "summary": "Update diesel consumption record by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Diesel consumption record updated" }, "404": { "description": "Not found" } } },
       "delete": { "summary": "Delete diesel consumption record by ID", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "204": { "description": "Diesel consumption record deleted" }, "404": { "description": "Not found" } } }
+    },
+    "/api/v1/invoices/filtered": {
+      "get": {
+        "summary": "Get filtered invoices",
+        "description": "Get invoices filtered by type, supplier, date range, etc.",
+        "parameters": [
+          { "name": "invoiceType", "in": "query", "schema": { "type": "string" } },
+          { "name": "supplierId", "in": "query", "schema": { "type": "integer" } },
+          { "name": "dateFrom", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "dateTo", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "status", "in": "query", "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10 } }
+        ],
+        "responses": {
+          "200": { "description": "Filtered invoices with pagination" }
+        }
+      }
+    },
+    "/api/v1/invoices/generate-from-consumption": {
+      "post": {
+        "summary": "Generate invoice from consumption records",
+        "description": "Create invoice based on fuel consumption records for a specific period",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "startDate": { "type": "string", "format": "date" },
+                  "endDate": { "type": "string", "format": "date" },
+                  "siteId": { "type": "integer" },
+                  "jobId": { "type": "integer" },
+                  "generatedByUserId": { "type": "string" }
+                },
+                "required": ["startDate", "endDate", "generatedByUserId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Invoice generated successfully" }
+        }
+      }
+    },
+    "/api/v1/reports/fuel-usage": {
+      "get": {
+        "summary": "Generate fuel usage report",
+        "description": "Generate detailed fuel usage report with filters",
+        "parameters": [
+          { "name": "reportType", "in": "query", "schema": { "type": "string", "enum": ["daily", "weekly", "monthly", "custom"] } },
+          { "name": "dateFrom", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "dateTo", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "siteId", "in": "query", "schema": { "type": "integer" } },
+          { "name": "vehicleType", "in": "query", "schema": { "type": "string" } },
+          { "name": "jobId", "in": "query", "schema": { "type": "integer" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 50 } }
+        ],
+        "responses": {
+          "200": { "description": "Fuel usage report with summary and pagination" }
+        }
+      }
+    },
+    "/api/v1/reports/sites": {
+      "get": {
+        "summary": "Get sites for reports",
+        "description": "Get list of sites for report filtering",
+        "responses": {
+          "200": { "description": "List of sites" }
+        }
+      }
+    },
+    "/api/v1/reports/vehicle-types": {
+      "get": {
+        "summary": "Get vehicle types for reports",
+        "description": "Get distinct vehicle types for report filtering",
+        "responses": {
+          "200": { "description": "List of vehicle types" }
+        }
+      }
+    },
+    "/api/v1/reports/export": {
+      "get": {
+        "summary": "Export report data",
+        "description": "Export fuel usage report data in various formats",
+        "parameters": [
+          { "name": "reportType", "in": "query", "schema": { "type": "string", "enum": ["daily", "weekly", "monthly", "custom"] } },
+          { "name": "dateFrom", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "dateTo", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "siteId", "in": "query", "schema": { "type": "integer" } },
+          { "name": "vehicleType", "in": "query", "schema": { "type": "string" } },
+          { "name": "format", "in": "query", "schema": { "type": "string", "enum": ["json", "csv"], "default": "json" } }
+        ],
+        "responses": {
+          "200": { "description": "Exported report data" }
+        }
+      }
+    },
+    "/api/v1/reports/efficiency-analysis": {
+      "get": {
+        "summary": "Get fuel efficiency analysis",
+        "description": "Get fuel efficiency analysis grouped by vehicle",
+        "parameters": [
+          { "name": "dateFrom", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "dateTo", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "siteId", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Fuel efficiency analysis" }
+        }
+      }
+    },
+    "/api/v1/audit-log/filtered": {
+      "get": {
+        "summary": "Get filtered audit logs",
+        "description": "Get audit logs filtered by action type, user, date range, etc.",
+        "parameters": [
+          { "name": "actionType", "in": "query", "schema": { "type": "string" } },
+          { "name": "userId", "in": "query", "schema": { "type": "string" } },
+          { "name": "dateFrom", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "dateTo", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "recordType", "in": "query", "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 50 } }
+        ],
+        "responses": {
+          "200": { "description": "Filtered audit logs with pagination" }
+        }
+      }
+    },
+    "/api/v1/audit-log/users": {
+      "get": {
+        "summary": "Get users for audit filter",
+        "description": "Get list of users for audit log filtering",
+        "responses": {
+          "200": { "description": "List of users" }
+        }
+      }
+    },
+    "/api/v1/audit-log/record-types": {
+      "get": {
+        "summary": "Get record types for audit filter",
+        "description": "Get distinct record types for audit log filtering",
+        "responses": {
+          "200": { "description": "List of record types" }
+        }
+      }
     },
     "/api/v1/invoices": {
       "get": { "summary": "Get all invoices", "responses": { "200": { "description": "A list of invoices" } } },

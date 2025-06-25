@@ -8,11 +8,18 @@ const {
   getAllInvoices,
   getInvoiceById,
   updateInvoice,
-  deleteInvoice
+  deleteInvoice,
+  getFilteredInvoices,
+  generateInvoiceFromConsumption
 } = require('../controllers/invoices.controller');
 
 const router = express.Router();
 
+// Frontend specific endpoints
+router.get('/filtered', getFilteredInvoices);
+router.post('/generate-from-consumption', generateInvoiceFromConsumption);
+
+// Standard CRUD endpoints
 router.post('/', joiValidate(createInvoiceSchema), createInvoice);
 router.get('/', getAllInvoices);
 router.get('/:id', getInvoiceById);

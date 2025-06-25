@@ -27,7 +27,7 @@ const {
 
 const router = express.Router();
 
-router.use(protect, requireRole('admin', 'site-manager'));
+router.use(protect, requireRole('admin', 'site-incharge'));
 
 // Vehicle Management
 router.post('/vehicles',

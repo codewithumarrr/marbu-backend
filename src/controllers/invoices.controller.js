@@ -333,19 +333,24 @@ exports.generateInvoiceFromConsumption = async (req, res, next) => {
       generatedByUserId
     } = req.body;
 
+    // If no dates provided, use last 30 days
+    const defaultEndDate = new Date();
+    const defaultStartDate = new Date();
+    defaultStartDate.setDate(defaultStartDate.getDate() - 30);
+
+    const queryStartDate = startDate ? new Date(startDate) : defaultStartDate;
+    const queryEndDate = endDate ? new Date(endDate) : defaultEndDate;
+
     // Get consumption records for the period
     const consumptionRecords = await prisma.diesel_consumption.findMany({
       where: {
         consumption_datetime: {
-          gte: new Date(startDate),
-          lte: new Date(endDate)
+          gte: queryStartDate,
+          lte: queryEndDate
         },
         ...(siteId && { site_id: parseInt(siteId) }),
         ...(jobId && { job_id: parseInt(jobId) }),
-        // Only include records not already invoiced
-        invoice_items: {
-          none: {}
-        }
+        // Remove the invoice_items filter for now to include all records
       },
       include: {
         jobs_projects: true,
@@ -391,11 +396,11 @@ exports.generateInvoiceFromConsumption = async (req, res, next) => {
       data: {
         invoice_number: invoiceNumber,
         invoice_date: new Date(),
-        start_date: new Date(startDate),
-        end_date: new Date(endDate),
+        start_date: queryStartDate,
+        end_date: queryEndDate,
         total_amount: totalAmount,
-        generated_by_user_id: generatedByUserId,
-        site_id: parseInt(siteId) || consumptionRecords[0].site_id
+        generated_by_user_id: generatedByUserId || "EMP001", // Default to employee number string
+        site_id: parseInt(siteId) || consumptionRecords[0].site_id || 1
       }
     });
 

@@ -52,22 +52,22 @@ async function main() {
       role_id: roleRecords.find(r => r.role_name === 'diesel-manager').role_id,
       site_id: sites[2].site_id
     },
-    // Tank In-charge for Fuel Receiving
+    // operator
     {
       employee_number: 'EMP004',
       password_hash: await bcrypt.hash('tank123', 10),
-      employee_name: 'Tina TankIncharge',
+      employee_name: 'Tina Operator',
       mobile_number: '03009998888',
-      role_id: roleRecords.find(r => r.role_name === 'Tank In-charge').role_id,
+      role_id: roleRecords.find(r => r.role_name === 'operator').role_id,
       site_id: sites[0].site_id
     },
-    // Site Manager for Fuel Receiving
+    // driver
     {
       employee_number: 'EMP005',
       password_hash: await bcrypt.hash('site123', 10),
-      employee_name: 'Sam SiteManager',
+      employee_name: 'Sam Driver',
       mobile_number: '03007776666',
-      role_id: roleRecords.find(r => r.role_name === 'Site Manager').role_id,
+      role_id: roleRecords.find(r => r.role_name === 'driver').role_id,
       site_id: sites[1].site_id
     }
   ];

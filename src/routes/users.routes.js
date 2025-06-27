@@ -9,11 +9,15 @@ const {
   createUser,
   getAllUsers,
   getUserById,
+  getUserByEmployeeNumber,
   updateUser,
   deleteUser
 } = require('../controllers/users.controller');
 
 const router = express.Router();
+
+// Public route for getting user by employee number (needed for auto-fill)
+router.get('/employee/:employeeNumber', protect, getUserByEmployeeNumber);
 
 router.use(protect, requireRole('admin'));
 

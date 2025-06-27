@@ -216,17 +216,26 @@ exports.getTanksBySite = async (req, res, next) => {
   }
 };
 
-// Get site-incharge employees for dropdown (updated logic)
+// Get employees from the same site as the logged-in user
 exports.getTankInchargeEmployees = async (req, res, next) => {
   try {
-    // Only return users with the role 'site-incharge'
+    // Get the logged-in user's site_id from the auth middleware
+    const loggedInUser = await prisma.users.findUnique({
+      where: { employee_id: req.user.id },
+      select: { site_id: true }
+    });
+
+    if (!loggedInUser) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Logged-in user not found'
+      });
+    }
+
+    // Get all users from the same site as the logged-in user
     const employees = await prisma.users.findMany({
       where: {
-        roles: {
-          role_name: {
-            in: ['Site Incharge', 'Admin']
-          }
-        }
+        site_id: loggedInUser.site_id
       },
       include: {
         roles: {

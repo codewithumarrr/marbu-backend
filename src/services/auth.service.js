@@ -15,18 +15,55 @@ const signRefreshToken = (employee_id) => {
 async function findUserByEmployeeNumber(employee_number) {
   return prisma.users.findUnique({
     where: { employee_number },
-    select: {
-      employee_id: true,
-      employee_number: true,
-      password_hash: true,
-      role_id: true,
-      // add other fields as needed
+    include: {
+      roles: {
+        select: {
+          role_name: true,
+          role_id: true
+        }
+      },
+      sites: {
+        select: {
+          site_name: true,
+          site_id: true,
+          tanks: {
+            select: {
+              tank_id: true,
+              tank_name: true,
+              capacity_liters: true
+            }
+          }
+        }
+      }
     }
   });
 }
 
-async function findUserById(id) {
-  return prisma.users.findUnique({ where: { id } });
+async function findUserById(employee_id) {
+  return prisma.users.findUnique({ 
+    where: { employee_id },
+    include: {
+      roles: {
+        select: {
+          role_name: true,
+          role_id: true
+        }
+      },
+      sites: {
+        select: {
+          site_name: true,
+          site_id: true,
+          tanks: {
+            select: {
+              tank_id: true,
+              tank_name: true,
+              capacity_liters: true
+            }
+          }
+        }
+      }
+    }
+  });
 }
 
 async function createUser(data) {

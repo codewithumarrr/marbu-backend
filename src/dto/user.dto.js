@@ -7,8 +7,11 @@ function userToDTO(user) {
     employeeNumber: user.employee_number,
     name: user.employee_name,
     role: user.roles ? user.roles.role_name : undefined,
+    roleId: user.role_id,
     mobile_number: user.mobile_number,
-    site_id: user.site_id
+    site_id: user.site_id,
+    site: user.sites ? user.sites.site_name : undefined,
+    tanks: user.sites ? user.sites.tanks : undefined
   };
 }
 

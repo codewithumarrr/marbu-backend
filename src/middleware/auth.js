@@ -37,7 +37,11 @@ const protect = async (req, res, next) => {
     }
 
     // 4) Grant access to protected route
-    req.user = user;
+    req.user = { 
+      id: user.employee_id,
+      role: user.roles.role_name,
+      employee_number: user.employee_number
+    };
     next();
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {

@@ -1,6 +1,7 @@
 // src/routes/diesel_receiving.routes.js
 
 const express = require('express');
+const { protect } = require('../middleware/auth');
 const {
   generateInvoiceFromReceiving,
   createFuelReceiving,
@@ -15,6 +16,9 @@ const {
 } = require('../controllers/diesel_receiving.controller');
 
 const router = express.Router();
+
+// Apply authentication to all routes
+router.use(protect);
 
 // Frontend specific endpoints
 router.get('/next-receipt-number', getNextReceiptNumber);

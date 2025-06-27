@@ -8,13 +8,15 @@ const {
   login,
   getProfile,
   updateProfile,
-  refreshTokenHandler
+  refreshTokenHandler,
+  logout
 } = require('../controllers/auth.controller');
 
 const router = express.Router();
 
 router.post('/register', protect, requireRole('admin'), joiValidate(registerSchema), register);
 router.post('/login', joiValidate(loginSchema), login);
+router.post('/logout', protect, logout);
 router.get('/profile', protect, getProfile);
 router.patch('/profile', protect, updateProfile);
 

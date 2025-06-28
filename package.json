@@ -2,11 +2,13 @@
   "name": "fleet-management-system",
   "version": "1.0.0",
   "description": "A comprehensive fleet management system for vehicle tracking, maintenance, and fuel management",
-  "main": "src/server.js",
+  "main": "api/index.js",
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "debug": "nodemon --inspect src/server.js",
+    "build": "npx prisma generate",
+    "vercel-build": "npx prisma generate && npx prisma migrate deploy",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "test": "jest",
@@ -60,7 +62,7 @@
     "supertest": "^6.3.3"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": "18.x"
   },
   "prisma": {
     "schema": "prisma/schema.prisma",

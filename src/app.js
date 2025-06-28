@@ -22,9 +22,22 @@ const apiLimiter = rateLimit({
 });
 
 // Middlewares
-app.use(helmet());
-app.use(cors());
-app.use(express.json());
+app.use(helmet({
+  contentSecurityPolicy: false // Disable CSP for Swagger UI
+}));
+
+// Configure CORS for production
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production'
+    ? [process.env.FRONTEND_URL || 'https://your-frontend-domain.vercel.app']
+    : ['http://localhost:3000', 'http://localhost:5173'],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 setupLogger(app);
 
 // Swagger UI

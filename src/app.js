@@ -26,13 +26,13 @@ app.use(helmet({
   contentSecurityPolicy: false // Disable CSP for Swagger UI
 }));
 
-// Configure CORS for production
+// Configure CORS for production - Allow all origins temporarily to fix CORS issue
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production'
-    ? [process.env.FRONTEND_URL || 'https://your-frontend-domain.vercel.app']
-    : ['http://localhost:3000', 'http://localhost:5173'],
+  origin: true, // Allow all origins
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept']
 };
 
 app.use(cors(corsOptions));

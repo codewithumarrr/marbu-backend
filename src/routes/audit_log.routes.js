@@ -9,7 +9,8 @@ const {
   deleteAuditLog,
   getFilteredAuditLogs,
   getUsersForAuditFilter,
-  getRecordTypesForAuditFilter
+  getRecordTypesForAuditFilter,
+  cleanupDuplicateAuditLogs
 } = require('../controllers/audit_log.controller');
 
 const router = express.Router();
@@ -18,6 +19,9 @@ const router = express.Router();
 router.get('/filtered', getFilteredAuditLogs);
 router.get('/users', getUsersForAuditFilter);
 router.get('/record-types', getRecordTypesForAuditFilter);
+
+// Admin specific endpoints
+router.post('/cleanup-duplicates', cleanupDuplicateAuditLogs);
 
 // Standard CRUD endpoints
 router.post('/', createAuditLog);

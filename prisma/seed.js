@@ -200,16 +200,102 @@ async function main() {
   ];
   await prisma.invoice_items.createMany({ data: invoiceItemsData, skipDuplicates: true });
 
-  // Seed audit_log
+  // Seed comprehensive audit_log data
   const auditLogData = [
     {
-      table_name: 'users',
-      record_id: users[0].employee_id,
+      table_name: 'diesel_receiving',
+      record_id: dieselReceiving[0].receiving_id,
       action_type: 'CREATE',
       old_value: '',
-      new_value: JSON.stringify(users[0]),
+      new_value: JSON.stringify({
+        receipt_number: 'RCP-2025-001234',
+        quantity_liters: 500,
+        received_datetime: '2025-06-21 10:30:15',
+        received_by_user_id: 'EMP001'
+      }),
       changed_by_user_id: users[0].employee_number,
-      change_timestamp: new Date()
+      change_timestamp: new Date('2025-06-21 10:30:15')
+    },
+    {
+      table_name: 'diesel_consumption',
+      record_id: dieselConsumption[0].consumption_id,
+      action_type: 'UPDATE',
+      old_value: JSON.stringify({
+        quantity_liters: 95,
+        odometer_km_hours: 950
+      }),
+      new_value: JSON.stringify({
+        quantity_liters: 100,
+        odometer_km_hours: 1000
+      }),
+      changed_by_user_id: users[1].employee_number,
+      change_timestamp: new Date('2025-06-21 09:15:42')
+    },
+    {
+      table_name: 'reports',
+      record_id: 123,
+      action_type: 'VIEW',
+      old_value: '',
+      new_value: JSON.stringify({
+        report_type: 'monthly_fuel_report',
+        generated_at: '2025-06-21 08:45:30'
+      }),
+      changed_by_user_id: users[2].employee_number,
+      change_timestamp: new Date('2025-06-21 08:45:30')
+    },
+    {
+      table_name: 'users',
+      record_id: users[3].employee_id,
+      action_type: 'CREATE',
+      old_value: '',
+      new_value: JSON.stringify({
+        employee_name: 'John Doe',
+        employee_number: 'EMP006',
+        role_id: 2
+      }),
+      changed_by_user_id: users[0].employee_number,
+      change_timestamp: new Date('2025-06-20 14:22:10')
+    },
+    {
+      table_name: 'vehicles_equipment',
+      record_id: vehicles[0].vehicle_equipment_id,
+      action_type: 'UPDATE',
+      old_value: JSON.stringify({
+        current_odometer_kilometer: 48000,
+        daily_usage_limit: 250
+      }),
+      new_value: JSON.stringify({
+        current_odometer_kilometer: 50000,
+        daily_usage_limit: 300
+      }),
+      changed_by_user_id: users[1].employee_number,
+      change_timestamp: new Date('2025-06-20 11:15:30')
+    },
+    {
+      table_name: 'invoices',
+      record_id: invoices[0].invoice_id,
+      action_type: 'CREATE',
+      old_value: '',
+      new_value: JSON.stringify({
+        invoice_number: 'INV-2025-001',
+        total_amount: 10000,
+        invoice_date: '2025-06-19'
+      }),
+      changed_by_user_id: users[0].employee_number,
+      change_timestamp: new Date('2025-06-19 16:30:45')
+    },
+    {
+      table_name: 'diesel_receiving',
+      record_id: 999,
+      action_type: 'DELETE',
+      old_value: JSON.stringify({
+        receipt_number: 'RCP-2025-001200',
+        quantity_liters: 200,
+        received_datetime: '2025-06-18'
+      }),
+      new_value: '',
+      changed_by_user_id: users[0].employee_number,
+      change_timestamp: new Date('2025-06-18 13:45:20')
     }
   ];
   await prisma.audit_log.createMany({ data: auditLogData, skipDuplicates: true });

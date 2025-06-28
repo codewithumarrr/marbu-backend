@@ -1,6 +1,7 @@
 // src/controllers/diesel_receiving.controller.js
 
 const prisma = require('../config/database');
+const { logAuditEntry } = require('./audit_log.controller');
 
 // Generate next receipt number
 exports.getNextReceiptNumber = async (req, res, next) => {
@@ -169,6 +170,21 @@ exports.createFuelReceiving = async (req, res, next) => {
         }
       }
     });
+
+    // Log audit entry
+    await logAuditEntry(
+      'diesel_receiving',
+      dieselReceiving.receiving_id,
+      'CREATE',
+      null,
+      {
+        receipt_number: receiptNumber,
+        quantity_liters: parseFloat(quantity),
+        received_datetime: dateTime,
+        received_by_user_id: receivedBy
+      },
+      receivedBy
+    );
 
     res.status(201).json({
       status: 'success',
@@ -366,6 +382,11 @@ exports.getDieselReceivingById = async (req, res, next) => {
 // Update diesel receiving record by ID
 exports.updateDieselReceiving = async (req, res, next) => {
   try {
+    // Get old record for audit
+    const oldRecord = await prisma.diesel_receiving.findUnique({
+      where: { receiving_id: parseInt(req.params.id) }
+    });
+
     const dieselReceiving = await prisma.diesel_receiving.update({
       where: { receiving_id: parseInt(req.params.id) },
       data: {
@@ -373,6 +394,16 @@ exports.updateDieselReceiving = async (req, res, next) => {
         updated_at: new Date()
       },
     });
+
+    // Log audit entry
+    await logAuditEntry(
+      'diesel_receiving',
+      dieselReceiving.receiving_id,
+      'UPDATE',
+      oldRecord,
+      req.body,
+      req.body.updated_by_user_id || 'SYSTEM'
+    );
     
     res.json({
       status: 'success',
@@ -387,9 +418,24 @@ exports.updateDieselReceiving = async (req, res, next) => {
 // Delete diesel receiving record by ID
 exports.deleteDieselReceiving = async (req, res, next) => {
   try {
+    // Get record for audit before deleting
+    const recordToDelete = await prisma.diesel_receiving.findUnique({
+      where: { receiving_id: parseInt(req.params.id) }
+    });
+
     await prisma.diesel_receiving.delete({
       where: { receiving_id: parseInt(req.params.id) },
     });
+
+    // Log audit entry
+    await logAuditEntry(
+      'diesel_receiving',
+      parseInt(req.params.id),
+      'DELETE',
+      recordToDelete,
+      null,
+      req.user?.employee_number || 'SYSTEM'
+    );
     
     res.json({
       status: 'success',

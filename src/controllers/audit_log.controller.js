@@ -4,51 +4,116 @@ const prisma = require('../config/database');
 
 // Helper to generate details string for audit log
 function generateDetails(log) {
-  let action = log.action_type ? log.action_type.charAt(0).toUpperCase() + log.action_type.slice(1).toLowerCase() : '';
-  let recordType = log.table_name || '';
-  let recordId = log.record_id ? `ID: ${log.record_id}` : '';
-  let user = log.changed_by_user ? log.changed_by_user.employee_name : '';
-  let summary = `${user} performed ${action}`;
+  const action = log.action_type;
+  const tableName = log.table_name;
+  const recordId = log.record_id;
+  
   // Try to parse old/new values for a more readable summary
   let oldVal, newVal;
   try { oldVal = log.old_value ? JSON.parse(log.old_value) : null; } catch { oldVal = log.old_value; }
   try { newVal = log.new_value ? JSON.parse(log.new_value) : null; } catch { newVal = log.new_value; }
 
-  // Show only changed fields for UPDATE
-  if (log.action_type === 'UPDATE' && oldVal && newVal) {
-    const changedFields = [];
-    for (const key in newVal) {
-      if (oldVal[key] !== newVal[key]) {
-        changedFields.push(`${key}: "${oldVal[key]}" → "${newVal[key]}"`);
+  // Generate user-friendly details based on table and action
+  switch (action) {
+    case 'CREATE':
+      switch (tableName) {
+        case 'diesel_receiving':
+          const quantity = newVal?.quantity_liters ? `${newVal.quantity_liters}L` : '';
+          const receiptNum = newVal?.receipt_number ? ` - ${newVal.receipt_number}` : '';
+          return `Added new fuel receipt${quantity ? ` - ${quantity}` : ''}${receiptNum}`;
+          
+        case 'diesel_consumption':
+          const consumedQty = newVal?.quantity_liters ? `${newVal.quantity_liters}L` : '';
+          const vehicle = newVal?.plate_number_machine_id || '';
+          return `Created fuel consumption record${consumedQty ? ` - ${consumedQty}` : ''}${vehicle ? ` for ${vehicle}` : ''}`;
+          
+        case 'invoices':
+          const invoiceNum = newVal?.invoice_number ? ` - ${newVal.invoice_number}` : '';
+          return `Generated new invoice${invoiceNum}`;
+          
+        case 'users':
+          const userName = newVal?.employee_name ? ` - ${newVal.employee_name}` : '';
+          return `Created new user account${userName}`;
+          
+        case 'vehicles_equipment':
+          const plateNum = newVal?.plate_number_machine_id ? ` - ${newVal.plate_number_machine_id}` : '';
+          return `Added new vehicle/equipment${plateNum}`;
+          
+        default:
+          return `Created new ${tableName.replace('_', ' ')} record`;
       }
-    }
-    if (changedFields.length > 0) {
-      summary += ` (changed fields: ${changedFields.join(', ')})`;
-    }
-  } else if (log.action_type === 'CREATE' && newVal) {
-    // Show a summary of created record, but exclude sensitive fields
-    const fields = Object.entries(newVal)
-      .filter(([k, v]) =>
-        typeof v !== 'string' || v.length < 40
-      )
-      .filter(([k]) =>
-        !['password', 'password_hash', 'signature_image_path'].includes(k)
-      )
-      .map(([k, v]) => `${k}: "${v}"`);
-    summary += ` (created fields: ${fields.join(', ')})`;
-  } else if (log.action_type === 'DELETE' && oldVal) {
-    // Show a summary of deleted record, but exclude sensitive fields
-    const fields = Object.entries(oldVal)
-      .filter(([k, v]) =>
-        typeof v !== 'string' || v.length < 40
-      )
-      .filter(([k]) =>
-        !['password', 'password_hash', 'signature_image_path'].includes(k)
-      )
-      .map(([k, v]) => `${k}: "${v}"`);
-    summary += ` (deleted fields: ${fields.join(', ')})`;
+      
+    case 'UPDATE':
+      switch (tableName) {
+        case 'diesel_receiving':
+          return 'Updated fuel receipt record';
+          
+        case 'diesel_consumption':
+          return 'Updated fuel consumption record';
+          
+        case 'invoices':
+          return 'Modified invoice details';
+          
+        case 'users':
+          const changedFields = [];
+          if (oldVal && newVal) {
+            for (const key in newVal) {
+              if (oldVal[key] !== newVal[key] && !['password_hash', 'updated_at'].includes(key)) {
+                changedFields.push(key.replace('_', ' '));
+              }
+            }
+          }
+          return `Updated user ${changedFields.length > 0 ? `(${changedFields.join(', ')})` : 'information'}`;
+          
+        case 'vehicles_equipment':
+          return 'Updated vehicle/equipment details';
+          
+        default:
+          return `Updated ${tableName.replace('_', ' ')} record`;
+      }
+      
+    case 'DELETE':
+      switch (tableName) {
+        case 'diesel_receiving':
+          const deletedReceipt = oldVal?.receipt_number ? ` - ${oldVal.receipt_number}` : '';
+          return `Deleted fuel receipt${deletedReceipt}`;
+          
+        case 'diesel_consumption':
+          return 'Deleted fuel consumption record';
+          
+        case 'invoices':
+          const deletedInvoice = oldVal?.invoice_number ? ` - ${oldVal.invoice_number}` : '';
+          return `Deleted invoice${deletedInvoice}`;
+          
+        case 'users':
+          const deletedUser = oldVal?.employee_name ? ` - ${oldVal.employee_name}` : '';
+          return `Removed user account${deletedUser}`;
+          
+        default:
+          return `Deleted ${tableName.replace('_', ' ')} record`;
+      }
+      
+    case 'VIEW':
+      switch (tableName) {
+        case 'reports':
+          return 'Generated monthly fuel report';
+          
+        case 'invoices':
+          return 'Viewed invoice details';
+          
+        case 'diesel_receiving':
+          return 'Accessed fuel receipt records';
+          
+        case 'diesel_consumption':
+          return 'Reviewed fuel consumption data';
+          
+        default:
+          return `Viewed ${tableName.replace('_', ' ')} records`;
+      }
+      
+    default:
+      return `Performed ${action.toLowerCase()} on ${tableName.replace('_', ' ')}`;
   }
-  return summary;
 }
 
 // Create a new audit log entry
@@ -135,6 +200,7 @@ exports.getFilteredAuditLogs = async (req, res, next) => {
 
     // Format for frontend
     const formattedLogs = auditLogs.map(log => ({
+      logId: log.log_id, // Add unique identifier
       timestamp: log.change_timestamp.toISOString().replace('T', ' ').slice(0, 19),
       user: log.changed_by_user.employee_name,
       action: log.action_type,
@@ -143,10 +209,15 @@ exports.getFilteredAuditLogs = async (req, res, next) => {
       details: generateDetails(log)
     }));
 
+    // Remove duplicates based on unique log_id
+    const uniqueLogs = formattedLogs.filter((log, index, self) => 
+      index === self.findIndex(l => l.logId === log.logId)
+    );
+
     res.json({
       status: 'success',
       data: {
-        auditLogs: formattedLogs,
+        auditLogs: uniqueLogs,
         pagination: {
           page: parseInt(page),
           limit: parseInt(limit),
@@ -180,6 +251,7 @@ exports.getAllAuditLogs = async (req, res, next) => {
 
     // Format for frontend
     const formattedLogs = auditLogs.map(log => ({
+      logId: log.log_id, // Add unique identifier
       timestamp: log.change_timestamp.toISOString().replace('T', ' ').slice(0, 19),
       user: log.changed_by_user.employee_name,
       action: log.action_type,
@@ -188,9 +260,16 @@ exports.getAllAuditLogs = async (req, res, next) => {
       details: generateDetails(log)
     }));
 
+    // Remove duplicates based on unique combination of fields
+    const uniqueLogs = formattedLogs.filter((log, index, self) => 
+      index === self.findIndex(l => 
+        l.logId === log.logId
+      )
+    );
+
     res.json({
       status: 'success',
-      data: formattedLogs
+      data: uniqueLogs
     });
   } catch (error) {
     next(error);
@@ -321,6 +400,65 @@ exports.deleteAuditLog = async (req, res, next) => {
     res.json({
       status: 'success',
       message: 'Audit log entry deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Clean up duplicate audit log entries (admin function)
+exports.cleanupDuplicateAuditLogs = async (req, res, next) => {
+  try {
+    // Find duplicates based on table_name, record_id, action_type, and changed_by_user_id
+    const duplicates = await prisma.audit_log.groupBy({
+      by: ['table_name', 'record_id', 'action_type', 'changed_by_user_id'],
+      having: {
+        log_id: {
+          _count: {
+            gt: 1
+          }
+        }
+      },
+      _count: {
+        log_id: true
+      }
+    });
+
+    let deletedCount = 0;
+
+    for (const duplicate of duplicates) {
+      // Get all records with these criteria
+      const records = await prisma.audit_log.findMany({
+        where: {
+          table_name: duplicate.table_name,
+          record_id: duplicate.record_id,
+          action_type: duplicate.action_type,
+          changed_by_user_id: duplicate.changed_by_user_id
+        },
+        orderBy: {
+          change_timestamp: 'desc'
+        }
+      });
+
+      // Keep the most recent one, delete the rest
+      if (records.length > 1) {
+        const toDelete = records.slice(1); // Keep first (most recent), delete rest
+        for (const record of toDelete) {
+          await prisma.audit_log.delete({
+            where: { log_id: record.log_id }
+          });
+          deletedCount++;
+        }
+      }
+    }
+
+    res.json({
+      status: 'success',
+      message: `Cleanup completed. Deleted ${deletedCount} duplicate audit log entries.`,
+      data: {
+        duplicateGroups: duplicates.length,
+        deletedEntries: deletedCount
+      }
     });
   } catch (error) {
     next(error);

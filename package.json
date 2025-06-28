@@ -8,7 +8,6 @@
     "dev": "nodemon src/server.js",
     "debug": "nodemon --inspect src/server.js",
     "build": "npx prisma generate",
-    "vercel-build": "npx prisma generate && npx prisma migrate deploy",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "test": "jest",

@@ -146,7 +146,10 @@ async function main() {
       created_at: new Date(),
       updated_at: new Date(),
       created_by_user_id: users[0].employee_number,
-      updated_by_user_id: users[0].employee_number
+      updated_by_user_id: users[0].employee_number,
+      diesel_rate: 2.25,
+      custom_supplier_name: null,
+      notes: 'Seeded record with diesel rate'
     }
   ];
   await prisma.diesel_receiving.createMany({ data: dieselReceivingData, skipDuplicates: true });

@@ -140,23 +140,55 @@ exports.createFuelReceiving = async (req, res, next) => {
       supplierId,
       mobileNumber,
       notes,
-      siteId
+      siteId,
+      customSupplierName,
+      dieselRate,
     } = req.body;
+
+    // Defensive: If supplierId is missing, null, empty, or not a number, allow null (for custom supplier)
+    let parsedSupplierId = null;
+    if (
+      supplierId !== undefined &&
+      supplierId !== null &&
+      supplierId !== "" &&
+      !isNaN(Number(supplierId))
+    ) {
+      parsedSupplierId = parseInt(supplierId);
+    }
+
+    // Defensive: If siteId is missing or not a number, get it from tankId if possible
+    let parsedSiteId = parseInt(siteId);
+    if (isNaN(parsedSiteId)) {
+      // Try to get siteId from tankId
+      const tank = await prisma.tanks.findUnique({
+        where: { tank_id: parseInt(tankId) }
+      });
+      if (tank && tank.site_id) {
+        parsedSiteId = tank.site_id;
+      } else {
+        // fallback to first site in DB
+        const firstSite = await prisma.sites.findFirst();
+        parsedSiteId = firstSite ? firstSite.site_id : 1;
+      }
+    }
 
     const dieselReceiving = await prisma.diesel_receiving.create({
       data: {
         receipt_number: receiptNumber,
         received_datetime: new Date(dateTime),
         quantity_liters: parseFloat(quantity),
-        site_id: parseInt(siteId),
+        site_id: parsedSiteId,
         tank_id: parseInt(tankId),
         received_by_user_id: receivedBy,
-        supplier_id: parseInt(supplierId),
+        supplier_id: parsedSupplierId,
         signature_image_path: '', // Will be updated when signature is uploaded
         created_at: new Date(),
         updated_at: new Date(),
         created_by_user_id: receivedBy, // Assuming same user creates and receives
-        updated_by_user_id: receivedBy
+        updated_by_user_id: receivedBy,
+        custom_supplier_name: customSupplierName || null,
+        diesel_rate: dieselRate !== undefined ? parseFloat(dieselRate) : null,
+        notes: notes || null
       },
       include: {
         sites: true,
@@ -308,37 +340,58 @@ exports.getActiveSuppliers = async (req, res, next) => {
 // Get all diesel receiving records with relations
 exports.getAllDieselReceiving = async (req, res, next) => {
   try {
-    const dieselReceiving = await prisma.diesel_receiving.findMany({
-      include: {
-        sites: {
-          select: {
-            site_name: true
+    // Pagination support
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const [records, total] = await Promise.all([
+      prisma.diesel_receiving.findMany({
+        skip,
+        take: limit,
+        include: {
+          sites: {
+            select: {
+              site_name: true
+            }
+          },
+          tanks: {
+            select: {
+              tank_name: true
+            }
+          },
+          suppliers: {
+            select: {
+              supplier_name: true
+            }
+          },
+          received_by_user: {
+            select: {
+              employee_name: true
+            }
           }
         },
-        tanks: {
-          select: {
-            tank_name: true
-          }
-        },
-        suppliers: {
-          select: {
-            supplier_name: true
-          }
-        },
-        received_by_user: {
-          select: {
-            employee_name: true
-          }
+        orderBy: {
+          received_datetime: 'desc'
         }
-      },
-      orderBy: {
-        received_datetime: 'desc'
-      }
-    });
+      }),
+      prisma.diesel_receiving.count()
+    ]);
+
+    // Attach new fields to response
+    const dieselReceivingWithCustom = records.map(r => ({
+      ...r,
+      custom_supplier_name: r.custom_supplier_name,
+      diesel_rate: r.diesel_rate,
+      notes: r.notes
+    }));
 
     res.json({
       status: 'success',
-      data: dieselReceiving
+      data: {
+        records: dieselReceivingWithCustom,
+        total
+      }
     });
   } catch (error) {
     next(error);
@@ -387,12 +440,38 @@ exports.updateDieselReceiving = async (req, res, next) => {
       where: { receiving_id: parseInt(req.params.id) }
     });
 
+    // Map camelCase to snake_case for Prisma
+    const {
+      receiptNumber,
+      dateTime,
+      quantity,
+      tankId,
+      receivedBy,
+      supplierId,
+      customSupplierName,
+      dieselRate,
+      notes,
+      siteId,
+      // Any other fields from frontend
+    } = req.body;
+
+    const updateData = {
+      ...(receiptNumber !== undefined && { receipt_number: receiptNumber }),
+      ...(dateTime !== undefined && { received_datetime: new Date(dateTime) }),
+      ...(quantity !== undefined && { quantity_liters: parseFloat(quantity) }),
+      ...(tankId !== undefined && { tank_id: parseInt(tankId) }),
+      ...(receivedBy !== undefined && { received_by_user_id: receivedBy }),
+      ...(supplierId !== undefined && { supplier_id: parseInt(supplierId) }),
+      ...(customSupplierName !== undefined && { custom_supplier_name: customSupplierName }),
+      ...(dieselRate !== undefined && { diesel_rate: parseFloat(dieselRate) }),
+      ...(notes !== undefined && { notes }),
+      ...(siteId !== undefined && { site_id: parseInt(siteId) }),
+      updated_at: new Date()
+    };
+
     const dieselReceiving = await prisma.diesel_receiving.update({
       where: { receiving_id: parseInt(req.params.id) },
-      data: {
-        ...req.body,
-        updated_at: new Date()
-      },
+      data: updateData,
     });
 
     // Log audit entry

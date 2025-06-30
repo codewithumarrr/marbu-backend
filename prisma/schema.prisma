@@ -93,16 +93,19 @@ model diesel_receiving {
   site_id              Int
   tank_id              Int
   received_by_user_id  String
-  supplier_id          Int
+  supplier_id          Int?
   signature_image_path String
   created_at           DateTime
   updated_at           DateTime
   created_by_user_id   String
   updated_by_user_id   String
+  custom_supplier_name String?   // New: for custom supplier name
+  diesel_rate          Float?    // New: for diesel rate
+  notes                String?   // New: for notes
 
   sites                sites    @relation(fields: [site_id], references: [site_id])
   tanks                tanks    @relation(fields: [tank_id], references: [tank_id])
-  suppliers            suppliers @relation(fields: [supplier_id], references: [supplier_id])
+  suppliers            suppliers? @relation(fields: [supplier_id], references: [supplier_id])
   received_by_user     users    @relation("received_by_user_id", fields: [received_by_user_id], references: [employee_number])
   created_by_user      users    @relation("created_by_user_id", fields: [created_by_user_id], references: [employee_number])
   updated_by_user      users    @relation("updated_by_user_id", fields: [updated_by_user_id], references: [employee_number])

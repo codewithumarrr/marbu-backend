@@ -73,7 +73,12 @@ exports.getRecentActivity = async (req, res, next) => {
         operator_driver_user: {
           select: {
             employee_name: true,
-            mobile_number: true
+            mobile_number: true,
+            roles: {
+              select: {
+                role_name: true
+              }
+            }
           }
         },
         jobs_projects: {
@@ -89,6 +94,7 @@ exports.getRecentActivity = async (req, res, next) => {
       vehicle: `${consumption.vehicles_equipment.type} ${consumption.vehicles_equipment.plate_number_machine_id}`,
       operator: consumption.operator_driver_user.employee_name,
       mobile: consumption.operator_driver_user.mobile_number,
+      role: consumption.operator_driver_user.roles?.role_name || 'N/A',
       quantity: consumption.quantity_liters,
       job: consumption.jobs_projects.job_number,
       status: 'Active' // You can add logic to determine status

@@ -4,6 +4,10 @@ const joiValidate = require('../middleware/joiValidate');
 const { registerSchema, loginSchema } = require('../validation/auth.validation');
 const { requireRole } = require('../utils/roleUtils');
 const {
+  generateAuthenticationOptions,
+  verifyAuthenticationResponse
+} = require('../controllers/auth.controller');
+const {
   register,
   login,
   getProfile,
@@ -21,5 +25,8 @@ router.get('/profile', protect, getProfile);
 router.patch('/profile', protect, updateProfile);
 
 router.post('/refresh-token', refreshTokenHandler);
+
+router.get('/generate-authentication-options', protect, generateAuthenticationOptions);
+router.post('/verify-authentication-response', protect, verifyAuthenticationResponse);
 
 module.exports = router;

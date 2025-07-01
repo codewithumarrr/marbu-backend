@@ -97,5 +97,7 @@ module.exports = {
   findUserByEmployeeNumber,
   findUserById,
   createUser,
-  comparePassword,
+  comparePassword
 };
+
+// WebAuthn related functions can be added here if needed

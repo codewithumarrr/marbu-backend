@@ -12,6 +12,53 @@ const {
 const { userToDTO } = require('../dto/user.dto');
 const prisma = require('../config/database');
 
+const generateAuthenticationOptions = async (req, res, next) => {
+  try {
+    console.log('Request Headers:', req.headers);
+    // Implement logic to generate authentication options using @simplewebauthn/server
+    // This will involve creating a challenge and other necessary parameters
+    const challenge = 'placeholder_challenge'; // Replace with actual challenge generation
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        options: {
+          challenge: challenge,
+          rp: { name: 'Marbu' },
+          user: { id: req.user.id, name: req.user.employee_number },
+          pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
+          authenticatorSelection: {
+            userVerification: 'required',
+            residentKey: 'required'
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error generating authentication options:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to generate authentication options' });
+    return;
+  }
+};
+
+const verifyAuthenticationResponse = async (req, res, next) => {
+  try {
+    // Implement logic to verify the authentication response using @simplewebauthn/server
+    // This will involve verifying the signature and other parameters
+    // For now, let's return a placeholder
+    res.status(200).json({
+      status: 'success',
+      data: {
+        verification: {
+          verified: true
+        }
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const register = async (req, res, next) => {
   try {
     const { employeeNumber, name, password, role, mobile_number, site_id } = req.body;
@@ -217,5 +264,7 @@ module.exports = {
   getProfile,
   updateProfile,
   refreshTokenHandler,
-  logout
+  logout,
+  generateAuthenticationOptions,
+  verifyAuthenticationResponse
 };

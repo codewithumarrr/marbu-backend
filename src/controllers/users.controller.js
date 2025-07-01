@@ -5,7 +5,10 @@ const fs = require('fs');
 const multer = require('multer');
 
 // Multer setup for user picture uploads
-const uploadDir = path.join(__dirname, '../../uploads/user_pictures');
+//for local development, we can use a relative path
+// const uploadDir = path.join(__dirname, '../../uploads/user_pictures');
+//for vercel deployment, we need to ensure the upload directory exists
+const uploadDir = path.join(__dirname, 'temp/uploads/user_pictures');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
 const storage = multer.diskStorage({

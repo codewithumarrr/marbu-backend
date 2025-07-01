@@ -175,7 +175,10 @@ exports.updateUser = async (req, res, next) => {
     if (req.file) {
       const protocol = req.protocol;
       const host = req.get('host');
-      userPictureUrl = `${protocol}://${host}/uploads/user_pictures/${req.file.filename}`;
+      //local
+      // userPictureUrl = `${protocol}://${host}/uploads/user_pictures/${req.file.filename}`;
+      //vercel
+      userPictureUrl = `${protocol}://${host}/tmp/uploads/user_pictures/${req.file.filename}`;
     }
     // Prepare update data
     const updateData = {

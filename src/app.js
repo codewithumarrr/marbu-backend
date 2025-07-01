@@ -51,12 +51,15 @@ app.use('/api/v1', apiLimiter, routes);
 // Serve uploads directory as static files
 const path = require('path');
 app.use(
-  '/uploads',
+  '/tmp/uploads',
   (req, res, next) => {
     // res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     next();
   },
-  express.static(path.join(__dirname, '../uploads'))
+  //local
+  // express.static(path.join(__dirname, '../uploads'))
+  //vercel  
+  express.static(path.join('tmp/uploads'))
 );
 
 // Error handling

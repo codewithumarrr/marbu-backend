@@ -8,7 +8,7 @@ const multer = require('multer');
 //for local development, we can use a relative path
 // const uploadDir = path.join(__dirname, '../../uploads/user_pictures');
 //for vercel deployment, we need to ensure the upload directory exists
-const uploadDir = path.join(__dirname, 'temp/uploads/user_pictures');
+const uploadDir = path.join('tmp/uploads/user_pictures');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
 const storage = multer.diskStorage({
@@ -31,7 +31,10 @@ exports.createUser = async (req, res, next) => {
     let userPictureUrl = null;
     if (req.file) {
       // Save the relative URL for the uploaded picture
-      userPictureUrl = `/uploads/user_pictures/${req.file.filename}`;
+      //local
+      // userPictureUrl = `/uploads/user_pictures/${req.file.filename}`;
+      //vercel
+      userPictureUrl = `/tmp/uploads/user_pictures/${req.file.filename}`;
     }
     const user = await prisma.users.create({
       data: {

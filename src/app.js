@@ -42,7 +42,7 @@ setupLogger(app);
 
 // Swagger UI
 app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-
+app.options('*', cors(corsOptions));
 // API Routes
 app.get('/', (req, res) => res.json({ message: 'Welcome to the API' }));
 app.use('/api/v1', apiLimiter, routes);

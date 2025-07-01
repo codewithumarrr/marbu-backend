@@ -34,7 +34,7 @@ const corsOptions = {
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept']
 };
-
+app.set("trust proxy", 1); // Trust first proxy for rate limiting
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -42,7 +42,7 @@ setupLogger(app);
 
 // Swagger UI
 app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-app.options('*', cors(corsOptions));
+// app.options('*', cors(corsOptions));
 // API Routes
 app.get('/', (req, res) => res.json({ message: 'Welcome to the API' }));
 app.use('/api/v1', apiLimiter, routes);

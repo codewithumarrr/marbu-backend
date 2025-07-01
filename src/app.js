@@ -53,7 +53,7 @@ const path = require('path');
 app.use(
   '/uploads',
   (req, res, next) => {
-    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    // res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     next();
   },
   express.static(path.join(__dirname, '../uploads'))
@@ -61,10 +61,10 @@ app.use(
 
 // Error handling
 app.use((req, res, next) => {
-  if (req.path.startsWith('/uploads/')) {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Cross-Origin-Resource-Policy', 'cross-origin');
-  }
+  // if (req.path.startsWith('/uploads/')) {
+  //   res.header('Access-Control-Allow-Origin', '*');
+  //   res.header('Cross-Origin-Resource-Policy', 'cross-origin');
+  // }
   next();
 });
 app.use(errorHandler);

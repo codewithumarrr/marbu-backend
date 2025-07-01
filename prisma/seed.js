@@ -30,6 +30,9 @@ async function main() {
   const usersData = [
     {
       employee_number: 'EMP001',
+      qatar_id_number: 'QID1234567890',
+      profession: 'Software Engineer',
+      user_picture: 'https://example.com/alice.jpg',
       password_hash: adminPassword,
       employee_name: 'Alice Admin',
       mobile_number: '03001234567',
@@ -38,6 +41,9 @@ async function main() {
     },
     {
       employee_number: 'EMP002',
+      qatar_id_number: 'QID0987654321',
+      profession: 'Project Manager',
+      user_picture: 'https://example.com/bob.jpg',
       password_hash: await bcrypt.hash('manager123', 10),
       employee_name: 'Bob Manager',
       mobile_number: '03007654321',
@@ -46,6 +52,9 @@ async function main() {
     },
     {
       employee_number: 'EMP003',
+      qatar_id_number: 'QID1122334455',
+      profession: 'Diesel Keeper',
+      user_picture: 'https://example.com/charlie.jpg',
       password_hash: await bcrypt.hash('keeper123', 10),
       employee_name: 'Charlie Keeper',
       mobile_number: '03009876543',
@@ -55,6 +64,9 @@ async function main() {
     // operator
     {
       employee_number: 'EMP004',
+      qatar_id_number: 'QID6677889900',
+      profession: 'Heavy Equipment Operator',
+      user_picture: 'https://example.com/tina.jpg',
       password_hash: await bcrypt.hash('tank123', 10),
       employee_name: 'Tina Operator',
       mobile_number: '03009998888',
@@ -64,15 +76,30 @@ async function main() {
     // driver
     {
       employee_number: 'EMP005',
+      qatar_id_number: 'QID2233445566',
+      profession: 'Truck Driver',
+      user_picture: 'https://example.com/sam.jpg',
       password_hash: await bcrypt.hash('site123', 10),
       employee_name: 'Sam Driver',
       mobile_number: '03007776666',
       role_id: roleRecords.find(r => r.role_name === 'driver').role_id,
       site_id: sites[1].site_id
+    },
+    // User with no site
+    {
+      employee_number: 'EMP006',
+      qatar_id_number: 'QID9988776655',
+      profession: 'Guest User',
+      user_picture: null, // Nullable field
+      password_hash: await bcrypt.hash('guest123', 10),
+      employee_name: 'Guest User',
+      mobile_number: '03001112222',
+      role_id: roleRecords.find(r => r.role_name === 'operator').role_id,
+      site_id: null // Nullable site_id
     }
   ];
   await prisma.users.createMany({ data: usersData, skipDuplicates: true });
-  const users = await prisma.users.findMany();
+  const users = await prisma.users.findMany(); // Re-fetch users to get their user_id
 
   // Seed tanks
   const tanksData = [
@@ -248,13 +275,15 @@ async function main() {
     },
     {
       table_name: 'users',
-      record_id: users[3].employee_id,
+      record_id: users.find(u => u.employee_number === 'EMP004').user_id, // Use user_id for audit log
       action_type: 'CREATE',
       old_value: '',
       new_value: JSON.stringify({
-        employee_name: 'John Doe',
-        employee_number: 'EMP006',
-        role_id: 2
+        employee_name: 'Tina Operator',
+        employee_number: 'EMP004',
+        qatar_id_number: 'QID6677889900',
+        profession: 'Heavy Equipment Operator',
+        role_id: roleRecords.find(r => r.role_name === 'operator').role_id,
       }),
       changed_by_user_id: users[0].employee_number,
       change_timestamp: new Date('2025-06-20 14:22:10')

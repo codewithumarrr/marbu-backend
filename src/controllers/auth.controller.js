@@ -10,6 +10,26 @@ const {
   comparePassword
 } = require('../services/auth.service');
 const { userToDTO } = require('../dto/user.dto');
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
+
+// Multer setup for user picture uploads (registration)
+const uploadDir = path.join(__dirname, '../../uploads/user_pictures');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    const uniqueName = `user_${Date.now()}${ext}`;
+    cb(null, uniqueName);
+  }
+});
+const uploadRegisterPicture = multer({ storage }).single('user_picture');
+exports.uploadRegisterPicture = uploadRegisterPicture;
 const prisma = require('../config/database');
 
 const generateAuthenticationOptions = async (req, res, next) => {
@@ -61,7 +81,7 @@ const verifyAuthenticationResponse = async (req, res, next) => {
 
 const register = async (req, res, next) => {
   try {
-    const { employeeNumber, name, password, role, mobile_number, site_id } = req.body;
+    const { employeeNumber, name, password, role, mobile_number, site_id, qatar_id_number, profession } = req.body;
 
     // Check for existing user by employee number
     const existingUser = await findUserByEmployeeNumber(employeeNumber);
@@ -69,7 +89,6 @@ const register = async (req, res, next) => {
       return next(new AppError('User already exists with this employee number', 400));
     }
 
-    // Create user
     // Find role_id from role name
     const roleRecord = await prisma.roles.findFirst({
       where: { role_name: role }
@@ -78,17 +97,27 @@ const register = async (req, res, next) => {
       return next(new AppError('Invalid role', 400));
     }
 
+    let userPictureUrl = null;
+    if (req.file) {
+      const protocol = req.protocol;
+      const host = req.get('host');
+      userPictureUrl = `${protocol}://${host}/uploads/user_pictures/${req.file.filename}`;
+    }
+
     const user = await createUser({
       employee_number: employeeNumber,
       employee_name: name,
       password,
       role_id: roleRecord.role_id,
       mobile_number,
-      site_id
+      site_id,
+      qatar_id_number,
+      profession,
+      user_picture: userPictureUrl
     });
 
-    const accessToken = signToken(user.employee_id);
-    const refreshToken = signRefreshToken(user.employee_id);
+    const accessToken = signToken(user.user_id, user.employee_id);
+    const refreshToken = signRefreshToken(user.user_id, user.employee_id);
 
     res.status(201).json({
       status: 'success',
@@ -115,8 +144,8 @@ const login = async (req, res, next) => {
       return next(new AppError('Incorrect employee number or password', 401));
     }
 
-    const accessToken = signToken(user.employee_id);
-    const loginRefreshToken = signRefreshToken(user.employee_id);
+    const accessToken = signToken(user.user_id, user.employee_id);
+    const loginRefreshToken = signRefreshToken(user.user_id, user.employee_id);
 
     res.status(200).json({
       status: 'success',
@@ -149,7 +178,7 @@ const refreshTokenHandler = async (req, res, next) => {
       return next(new AppError('User not found', 404));
     }
     
-    const accessToken = signToken(user.employee_id);
+    const accessToken = signToken(user.user_id, user.employee_id);
     
     res.status(200).json({
       status: 'success',
@@ -164,8 +193,17 @@ const refreshTokenHandler = async (req, res, next) => {
 const getProfile = async (req, res, next) => {
   try {
     const user = await prisma.users.findUnique({
-      where: { employee_id: req.user.id },
-      include: {
+      where: { user_id: req.user.id },
+      select: { // Select scalar fields directly
+        user_id: true,
+        employee_number: true,
+        qatar_id_number: true,
+        profession: true,
+        employee_name: true,
+        mobile_number: true,
+        user_picture: true, // Add user_picture
+        role_id: true,
+        site_id: true,
         roles: {
           select: {
             role_name: true,
@@ -207,7 +245,7 @@ const updateProfile = async (req, res, next) => {
       }
 
       const user = await prisma.users.findUnique({
-        where: { employee_id: req.user.id }
+        where: { user_id: req.user.id }
       });
 
       if (!(await bcrypt.compare(currentPassword, user.password_hash))) {
@@ -218,9 +256,18 @@ const updateProfile = async (req, res, next) => {
     }
 
     const updatedUser = await prisma.users.update({
-      where: { employee_id: req.user.id },
+      where: { user_id: req.user.id },
       data: updateData,
-      include: {
+      select: { // Select scalar fields directly
+        user_id: true,
+        employee_number: true,
+        qatar_id_number: true,
+        profession: true,
+        employee_name: true,
+        mobile_number: true,
+        user_picture: true, // Add user_picture
+        role_id: true,
+        site_id: true,
         roles: {
           select: {
             role_name: true,
@@ -266,5 +313,6 @@ module.exports = {
   refreshTokenHandler,
   logout,
   generateAuthenticationOptions,
-  verifyAuthenticationResponse
+  verifyAuthenticationResponse,
+  uploadRegisterPicture
 };

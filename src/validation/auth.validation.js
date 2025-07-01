@@ -9,7 +9,7 @@ const registerSchema = Joi.object({
   role: Joi.string().required(),
   mobile_number: Joi.string().required(),
   site_id: Joi.number().integer().required()
-});
+}).unknown(true);
 
 const loginSchema = Joi.object({
   employee_number: Joi.string().required(),

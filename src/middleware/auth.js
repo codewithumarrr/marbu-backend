@@ -19,11 +19,12 @@ const protect = async (req, res, next) => {
 
     // 3) Check if user still exists
     const user = await prisma.users.findUnique({
-      where: { employee_id: decoded.employee_id },
+      where: { user_id: decoded.user_id },
       select: {
-        employee_id: true,
+        user_id: true,
         role_id: true,
         employee_number: true,
+        user_picture: true,
         roles: {
           select: {
             role_name: true
@@ -37,8 +38,8 @@ const protect = async (req, res, next) => {
     }
 
     // 4) Grant access to protected route
-    req.user = { 
-      id: user.employee_id,
+    req.user = {
+      id: user.user_id,
       role: user.roles.role_name,
       employee_number: user.employee_number
     };

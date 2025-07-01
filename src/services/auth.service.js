@@ -4,18 +4,28 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../config/database');
 
-const signToken = (employee_id) => {
-  return jwt.sign({ employee_id }, process.env.JWT_SECRET, { expiresIn: '500m' });
+const signToken = (user_id, employee_id) => {
+  return jwt.sign({ user_id, employee_id }, process.env.JWT_SECRET, { expiresIn: '500m' });
 };
 
-const signRefreshToken = (employee_id) => {
-  return jwt.sign({ employee_id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+const signRefreshToken = (user_id, employee_id) => {
+  return jwt.sign({ user_id, employee_id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
 };
 
 async function findUserByEmployeeNumber(employee_number) {
   return prisma.users.findUnique({
     where: { employee_number },
-    include: {
+    select: { // Select scalar fields directly
+      user_id: true,
+      employee_number: true,
+      qatar_id_number: true,
+      profession: true,
+      password_hash: true,
+      employee_name: true,
+      mobile_number: true,
+      user_picture: true,
+      role_id: true,
+      site_id: true,
       roles: {
         select: {
           role_name: true,
@@ -40,9 +50,19 @@ async function findUserByEmployeeNumber(employee_number) {
 }
 
 async function findUserById(employee_id) {
-  return prisma.users.findUnique({ 
+  return prisma.users.findUnique({
     where: { employee_id },
-    include: {
+    select: {
+      user_id: true,
+      employee_number: true,
+      qatar_id_number: true,
+      profession: true,
+      password_hash: true,
+      employee_name: true,
+      mobile_number: true,
+      user_picture: true,
+      role_id: true,
+      site_id: true,
       roles: {
         select: {
           role_name: true,
@@ -69,14 +89,24 @@ async function findUserById(employee_id) {
 async function createUser(data) {
   data.password_hash = await bcrypt.hash(data.password, 12);
   delete data.password;
+  // Ensure required fields are present
+  const safeData = {
+    ...data,
+    qatar_id_number: data.qatar_id_number !== undefined ? data.qatar_id_number : "",
+    profession: data.profession !== undefined ? data.profession : "",
+    site_id: data.site_id ? parseInt(data.site_id) : null,
+  };
   const created = await prisma.users.create({
-    data,
+    data: safeData,
     select: {
-      employee_id: true,
+      user_id: true,
       employee_number: true,
+      qatar_id_number: true,
+      profession: true,
       employee_name: true,
       mobile_number: true,
       site_id: true,
+      user_picture: true,
       roles: {
         select: {
           role_name: true

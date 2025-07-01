@@ -269,7 +269,7 @@ exports.getTankInchargeEmployees = async (req, res, next) => {
   try {
     // Get the logged-in user's site_id from the auth middleware
     const loggedInUser = await prisma.users.findUnique({
-      where: { employee_id: req.user.id },
+      where: { user_id: req.user.id },
       select: { site_id: true }
     });
 
@@ -524,3 +524,4 @@ exports.deleteDieselReceiving = async (req, res, next) => {
     next(error);
   }
 };
+

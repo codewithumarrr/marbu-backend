@@ -11,7 +11,8 @@ const {
   getUserById,
   getUserByEmployeeNumber,
   updateUser,
-  deleteUser
+  deleteUser,
+  uploadUserPicture
 } = require('../controllers/users.controller');
 
 const router = express.Router();
@@ -21,10 +22,10 @@ router.get('/employee/:employeeNumber', protect, getUserByEmployeeNumber);
 
 router.use(protect, requireRole('admin'));
 
-router.post('/', joiValidate(createUserSchema), createUser);
+router.post('/', uploadUserPicture, joiValidate(createUserSchema), createUser);
 router.get('/', getAllUsers);
 router.get('/:id', getUserById);
-router.put('/:id', joiValidate(updateUserSchema), updateUser);
+router.put('/:id', uploadUserPicture, joiValidate(updateUserSchema), updateUser);
 router.delete('/:id', deleteUser);
 
 module.exports = router;

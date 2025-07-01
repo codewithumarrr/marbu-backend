@@ -5,9 +5,8 @@ const { registerSchema, loginSchema } = require('../validation/auth.validation')
 const { requireRole } = require('../utils/roleUtils');
 const {
   generateAuthenticationOptions,
-  verifyAuthenticationResponse
-} = require('../controllers/auth.controller');
-const {
+  verifyAuthenticationResponse,
+  uploadRegisterPicture,
   register,
   login,
   getProfile,
@@ -18,7 +17,7 @@ const {
 
 const router = express.Router();
 
-router.post('/register', protect, requireRole('admin'), joiValidate(registerSchema), register);
+router.post('/register', protect, requireRole('admin'), uploadRegisterPicture, joiValidate(registerSchema), register);
 router.post('/login', joiValidate(loginSchema), login);
 router.post('/logout', protect, logout);
 router.get('/profile', protect, getProfile);

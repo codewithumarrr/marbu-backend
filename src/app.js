@@ -59,7 +59,7 @@ app.use(
   //local
   // express.static(path.join(__dirname, '../uploads'))
   //vercel  
-  express.static(path.join('tmp/uploads'))
+  express.static(path.join('/tmp','/uploads'))
 );
 
 // Error handling

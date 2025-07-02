@@ -11,35 +11,50 @@ async function main() {
     { division_name: 'AP', description: 'AP Division' },
     { division_name: 'ABOUDI', description: 'ABOUDI Division' }
   ];
-  await prisma.divisions.createMany({ data: divisionsData, skipDuplicates: true });
+  for (const division of divisionsData) {
+    await prisma.divisions.upsert({
+      where: { division_name: division.division_name },
+      update: {},
+      create: division,
+    });
+  }
   const divisions = await prisma.divisions.findMany();
 
   // Seed roles
-  const roles = await prisma.roles.createMany({
-    data: [
-      { role_name: 'admin', description: 'Administrator' },
-      { role_name: 'site-incharge', description: 'Site Incharge' },
-      { role_name: 'diesel-manager', description: 'Diesel Manager' },
-      { role_name: 'operator', description: 'Operator' },
-      { role_name: 'driver', description: 'Driver' },
-    ],
-    skipDuplicates: true
-  });
+  const rolesData = [
+    { role_name: 'admin', description: 'Administrator' },
+    { role_name: 'site-incharge', description: 'Site Incharge' },
+    { role_name: 'diesel-manager', description: 'Diesel Manager' },
+    { role_name: 'operator', description: 'Operator' },
+    { role_name: 'driver', description: 'Driver' },
+  ];
+  for (const role of rolesData) {
+    await prisma.roles.upsert({
+      where: { role_name: role.role_name },
+      update: {},
+      create: role,
+    });
+  }
+  const roleRecords = await prisma.roles.findMany();
 
-  // Seed sites (including real tank locations)
+  // Seed sites
   const siteData = [
     { site_name: 'GRAGE-43', location: 'GRAGE-43', division_id: divisions.find(d => d.division_name === 'H4')?.division_id },
     { site_name: 'SELIYA', location: 'SELIYA (MRJ-134)', division_id: divisions.find(d => d.division_name === 'RD')?.division_id },
     { site_name: 'UM SALAL', location: 'UM SALAL (MRJ-150)', division_id: divisions.find(d => d.division_name === 'HHG')?.division_id }
   ];
-  await prisma.sites.createMany({ data: siteData, skipDuplicates: true });
+  for (const site of siteData) {
+    await prisma.sites.upsert({
+      where: { site_name: site.site_name },
+      update: {},
+      create: site,
+    });
+  }
   const sites = await prisma.sites.findMany();
 
-  // Seed users (including real users from data table)
-  const roleRecords = await prisma.roles.findMany();
+  // Seed users
   const adminPassword = await bcrypt.hash('pmv01', 10);
   const usersData = [
-    // Keep existing admin user
     {
       employee_number: 'EMP001',
       qatar_id_number: 'QID1234567890',
@@ -51,7 +66,6 @@ async function main() {
       role_id: roleRecords.find(r => r.role_name === 'admin').role_id,
       site_id: sites[0].site_id
     },
-    // Real users from data table
     {
       employee_number: '33445',
       qatar_id_number: '29435629459',
@@ -100,7 +114,6 @@ async function main() {
       site_id: sites.find(s => s.site_name === 'UM SALAL')?.site_id,
       division_id: divisions.find(d => d.division_name === 'HHG')?.division_id
     },
-    // Keep some existing sample users
     {
       employee_number: 'EMP004',
       qatar_id_number: 'QID6677889900',
@@ -126,41 +139,35 @@ async function main() {
       division_id: divisions.find(d => d.division_name === 'ABOUDI')?.division_id
     }
   ];
-  await prisma.users.createMany({ data: usersData, skipDuplicates: true });
-  const users = await prisma.users.findMany(); // Re-fetch users to get their user_id
+  for (const user of usersData) {
+    await prisma.users.upsert({
+      where: { employee_number: user.employee_number },
+      update: {},
+      create: user,
+    });
+  }
+  const users = await prisma.users.findMany();
 
-  // Seed tanks (including real tanks from data table)
+  // Seed tanks
   const tanksData = [
-    // Keep existing sample tanks
     { tank_name: 'Tank A', capacity_liters: 10000, site_id: sites[0].site_id },
     { tank_name: 'Tank B', capacity_liters: 8000, site_id: sites[1].site_id },
     { tank_name: 'Tank C', capacity_liters: 12000, site_id: sites[2].site_id },
-    // Real tanks from data table
-    { 
-      tank_name: 'GRAGE-43 Office', 
-      capacity_liters: 20000, 
-      site_id: sites.find(s => s.site_name === 'GRAGE-43')?.site_id 
-    },
-    { 
-      tank_name: 'GRAGE-43 Tank 2', 
-      capacity_liters: 20000, 
-      site_id: sites.find(s => s.site_name === 'GRAGE-43')?.site_id 
-    },
-    { 
-      tank_name: 'SELIYA Tank (MRJ-134)', 
-      capacity_liters: 20000, 
-      site_id: sites.find(s => s.site_name === 'SELIYA')?.site_id 
-    },
-    { 
-      tank_name: 'UM SALAL Tank (MRJ-150)', 
-      capacity_liters: 100000, 
-      site_id: sites.find(s => s.site_name === 'UM SALAL')?.site_id 
-    }
+    { tank_name: 'GRAGE-43 Office', capacity_liters: 20000, site_id: sites.find(s => s.site_name === 'GRAGE-43')?.site_id },
+    { tank_name: 'GRAGE-43 Tank 2', capacity_liters: 20000, site_id: sites.find(s => s.site_name === 'GRAGE-43')?.site_id },
+    { tank_name: 'SELIYA Tank (MRJ-134)', capacity_liters: 20000, site_id: sites.find(s => s.site_name === 'SELIYA')?.site_id },
+    { tank_name: 'UM SALAL Tank (MRJ-150)', capacity_liters: 100000, site_id: sites.find(s => s.site_name === 'UM SALAL')?.site_id }
   ];
-  await prisma.tanks.createMany({ data: tanksData, skipDuplicates: true });
+  for (const tank of tanksData) {
+    await prisma.tanks.upsert({
+      where: { tank_name: tank.tank_name },
+      update: {},
+      create: tank,
+    });
+  }
   const tanks = await prisma.tanks.findMany();
 
-  // Seed suppliers (including Qatar Fuel from data table)
+  // Seed suppliers
   const suppliersData = [
     {
       supplier_name: 'Qatar Fuel (Woqod)',
@@ -169,10 +176,16 @@ async function main() {
       address: 'Qatar'
     }
   ];
-  await prisma.suppliers.createMany({ data: suppliersData, skipDuplicates: true });
+  for (const supplier of suppliersData) {
+    await prisma.suppliers.upsert({
+      where: { supplier_name: supplier.supplier_name },
+      update: {},
+      create: supplier,
+    });
+  }
   const suppliers = await prisma.suppliers.findMany();
 
-  // Seed vehicles_equipment (with division assignments)
+  // Seed vehicles_equipment
   const vehiclesData = [
     {
       plate_number_machine_id: 'ABC-123',
@@ -220,7 +233,13 @@ async function main() {
       division_id: divisions.find(d => d.division_name === 'ABOUDI')?.division_id
     }
   ];
-  await prisma.vehicles_equipment.createMany({ data: vehiclesData, skipDuplicates: true });
+  for (const vehicle of vehiclesData) {
+    await prisma.vehicles_equipment.upsert({
+      where: { plate_number_machine_id: vehicle.plate_number_machine_id },
+      update: {},
+      create: vehicle,
+    });
+  }
   const vehicles = await prisma.vehicles_equipment.findMany();
 
   // Seed jobs_projects
@@ -238,7 +257,13 @@ async function main() {
       end_date: new Date('2025-06-15')
     }
   ];
-  await prisma.jobs_projects.createMany({ data: jobsData, skipDuplicates: true });
+  for (const job of jobsData) {
+    await prisma.jobs_projects.upsert({
+      where: { job_number: job.job_number },
+      update: {},
+      create: job,
+    });
+  }
   const jobs = await prisma.jobs_projects.findMany();
 
   // Seed diesel_receiving
@@ -261,7 +286,13 @@ async function main() {
       notes: 'Seeded record with diesel rate'
     }
   ];
-  await prisma.diesel_receiving.createMany({ data: dieselReceivingData, skipDuplicates: true });
+  for (const dr of dieselReceivingData) {
+    await prisma.diesel_receiving.upsert({
+      where: { receipt_number: dr.receipt_number },
+      update: {},
+      create: dr,
+    });
+  }
   const dieselReceiving = await prisma.diesel_receiving.findMany();
 
   // Seed diesel_consumption
@@ -281,7 +312,13 @@ async function main() {
       updated_by_user_id: users[1].employee_number
     }
   ];
-  await prisma.diesel_consumption.createMany({ data: dieselConsumptionData, skipDuplicates: true });
+  for (const dc of dieselConsumptionData) {
+    await prisma.diesel_consumption.upsert({
+      where: { signature_image_path: dc.signature_image_path },
+      update: {},
+      create: dc,
+    });
+  }
   const dieselConsumption = await prisma.diesel_consumption.findMany();
 
   // Seed invoices
@@ -296,7 +333,13 @@ async function main() {
       site_id: sites[0].site_id
     }
   ];
-  await prisma.invoices.createMany({ data: invoicesData, skipDuplicates: true });
+  for (const invoice of invoicesData) {
+    await prisma.invoices.upsert({
+      where: { invoice_number: invoice.invoice_number },
+      update: {},
+      create: invoice,
+    });
+  }
   const invoices = await prisma.invoices.findMany();
 
   // Seed invoice_items
@@ -310,9 +353,10 @@ async function main() {
       job_id: jobs[0].job_id
     }
   ];
+  // No unique field for upsert, so fallback to createMany with skipDuplicates
   await prisma.invoice_items.createMany({ data: invoiceItemsData, skipDuplicates: true });
 
-  // Seed comprehensive audit_log data
+  // Seed audit_log
   const auditLogData = [
     {
       table_name: 'diesel_receiving',
@@ -357,7 +401,7 @@ async function main() {
     },
     {
       table_name: 'users',
-      record_id: users.find(u => u.employee_number === 'EMP004').user_id, // Use user_id for audit log
+      record_id: users.find(u => u.employee_number === 'EMP004').user_id,
       action_type: 'CREATE',
       old_value: '',
       new_value: JSON.stringify({
@@ -412,9 +456,10 @@ async function main() {
       change_timestamp: new Date('2025-06-18 13:45:20')
     }
   ];
+  // No unique field for upsert, so fallback to createMany with skipDuplicates
   await prisma.audit_log.createMany({ data: auditLogData, skipDuplicates: true });
 
-  console.log('Seed data inserted for all tables.');
+  console.log('Seed data inserted for all tables using upsert where possible.');
 }
 
 main()

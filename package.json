@@ -21,7 +21,8 @@
     "db:studio": "npx prisma studio",
     "db:setup": "npm run migrate && npm run generate && npm run seed",
     "prepare": "npm run generate",
-    "studio": "npx prisma studio"
+    "studio": "npx prisma studio",
+    "delete": "node prisma/delete_seed.js"
   },
   "keywords": [
     "fleet-management",

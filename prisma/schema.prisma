@@ -35,14 +35,14 @@ model users {
 
 model roles {
   role_id     Int     @id @default(autoincrement())
-  role_name   String
+  role_name   String  @unique
   description String
   users       users[]
 }
 
 model divisions {
   division_id         Int      @id @default(autoincrement())
-  division_name       String
+  division_name       String   @unique
   description         String?
 
   sites               sites[]
@@ -52,7 +52,7 @@ model divisions {
 
 model sites {
   site_id           Int                @id @default(autoincrement())
-  site_name         String
+  site_name         String   @unique
   location          String
   division_id       Int?               // New field
 
@@ -66,7 +66,7 @@ model sites {
 
 model tanks {
   tank_id          Int                @id @default(autoincrement())
-  tank_name        String
+  tank_name        String   @unique
   capacity_liters  Float
   site_id          Int
   sites            sites              @relation(fields: [site_id], references: [site_id])
@@ -75,7 +75,7 @@ model tanks {
 
 model suppliers {
   supplier_id         Int                @id @default(autoincrement())
-  supplier_name       String
+  supplier_name       String   @unique
   contact_person_name String
   contact_number      String
   address             String
@@ -84,7 +84,7 @@ model suppliers {
 
 model vehicles_equipment {
   vehicle_equipment_id      Int     @id @default(autoincrement())
-  plate_number_machine_id   String
+  plate_number_machine_id   String   @unique
   type                      String
   make_model                String
   current_odometer_hours    Float
@@ -98,7 +98,7 @@ model vehicles_equipment {
 
 model jobs_projects {
   job_id          Int                @id @default(autoincrement())
-  job_number      String
+  job_number      String   @unique
   job_description String
   start_date      DateTime
   end_date        DateTime
@@ -108,7 +108,7 @@ model jobs_projects {
 
 model diesel_receiving {
   receiving_id         Int      @id @default(autoincrement())
-  receipt_number       String
+  receipt_number       String   @unique
   received_datetime    DateTime
   quantity_liters      Float
   site_id              Int
@@ -134,6 +134,7 @@ model diesel_receiving {
 
 model diesel_consumption {
   consumption_id           Int      @id @default(autoincrement())
+  signature_image_path     String   @unique
   consumption_datetime     DateTime
   quantity_liters          Float
   site_id                  Int
@@ -141,7 +142,6 @@ model diesel_consumption {
   job_id                   Int
   operator_driver_user_id  String
   odometer_km_hours        Float
-  signature_image_path     String
   created_at               DateTime
   updated_at               DateTime
   created_by_user_id       String
@@ -158,7 +158,7 @@ model diesel_consumption {
 
 model invoices {
   invoice_id            Int      @id @default(autoincrement())
-  invoice_number        String
+  invoice_number        String   @unique
   invoice_date          DateTime
   start_date            DateTime
   end_date              DateTime

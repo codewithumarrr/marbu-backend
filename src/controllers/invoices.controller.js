@@ -6,14 +6,18 @@ const prisma = require('../config/database');
 exports.createInvoice = async (req, res, next) => {
   try {
     const {
-      supplier,
-      date,
-      dueDate,
-      amount,
-      status,
-      siteId,
-      generatedByUserId
+      site_id,
+      invoice_date,
+      start_date,
+      end_date,
+      total_amount,
+      generated_by_user_id
     } = req.body;
+
+    // Validate required fields
+    if (!site_id || !invoice_date || !start_date || !end_date || !total_amount || !generated_by_user_id) {
+      return res.status(400).json({ status: 'error', message: 'Missing required fields.' });
+    }
 
     // Generate invoice number
     const currentYear = new Date().getFullYear();
@@ -39,12 +43,12 @@ exports.createInvoice = async (req, res, next) => {
     const invoice = await prisma.invoices.create({
       data: {
         invoice_number: invoiceNumber,
-        invoice_date: new Date(date),
-        start_date: new Date(date), // You might want to make this configurable
-        end_date: new Date(dueDate),
-        total_amount: parseFloat(amount.replace(/[^\d.-]/g, '')), // Remove currency symbols
-        generated_by_user_id: generatedByUserId,
-        site_id: parseInt(siteId)
+        invoice_date: new Date(invoice_date),
+        start_date: new Date(start_date),
+        end_date: new Date(end_date),
+        site_id: parseInt(site_id),
+        total_amount: parseFloat(total_amount),
+        generated_by_user_id: generated_by_user_id
       },
       include: {
         sites: {
@@ -74,8 +78,6 @@ exports.createInvoice = async (req, res, next) => {
 exports.getFilteredInvoices = async (req, res, next) => {
   try {
     const {
-      invoiceType,
-      supplierId,
       dateFrom,
       dateTo,
       status,
@@ -84,15 +86,6 @@ exports.getFilteredInvoices = async (req, res, next) => {
     } = req.query;
 
     const where = {};
-
-    // Flexible filter logic
-    if (invoiceType) {
-      where.invoice_type = invoiceType;
-    }
-
-    if (supplierId) {
-      where.supplier = supplierId;
-    }
 
     if (dateFrom && !dateTo) {
       where.invoice_date = { gte: new Date(dateFrom), lte: new Date(dateFrom) };
@@ -149,7 +142,6 @@ exports.getFilteredInvoices = async (req, res, next) => {
     // Format invoices for frontend
     const formattedInvoices = invoices.map(invoice => ({
       invoiceNo: invoice.invoice_number,
-      supplier: invoice.supplier || 'Various',
       date: invoice.invoice_date.toISOString().split('T')[0],
       dueDate: invoice.end_date.toISOString().split('T')[0],
       amount: `QAR ${invoice.total_amount.toFixed(2)}`,

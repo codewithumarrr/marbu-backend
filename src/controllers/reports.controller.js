@@ -233,13 +233,19 @@ exports.emailReport = async (req, res, next) => {
 // Generate fuel usage report based on filters
 exports.generateFuelUsageReport = async (req, res, next) => {
   try {
+    // Flexible filter extraction
     const {
       reportType,
       dateFrom,
       dateTo,
       siteId,
-      vehicleType,
       jobId,
+      vehicleType,
+      operator,
+      plateNumber,
+      fuelMin,
+      fuelMax,
+      efficiency,
       page = 1,
       limit = 50
     } = req.query;
@@ -272,26 +278,39 @@ exports.generateFuelUsageReport = async (req, res, next) => {
         endDate = new Date();
     }
 
+    // Build flexible where clause
     const where = {
-      consumption_datetime: {
-        gte: startDate,
-        lte: endDate
-      }
+      ...(startDate && endDate && {
+        consumption_datetime: {
+          gte: startDate,
+          lte: endDate
+        }
+      })
     };
 
-    if (siteId) {
-      where.site_id = parseInt(siteId);
+    if (siteId) where.site_id = parseInt(siteId);
+    if (jobId) where.job_id = parseInt(jobId);
+
+    // Add vehicleType, plateNumber, operator, fuelMin, fuelMax, efficiency
+    if (vehicleType || plateNumber) {
+      where.vehicles_equipment = {};
+      if (vehicleType) where.vehicles_equipment.type = vehicleType;
+      if (plateNumber) where.vehicles_equipment.plate_number_machine_id = { contains: plateNumber };
     }
 
-    if (vehicleType) {
-      where.vehicles_equipment = {
-        type: vehicleType
+    if (operator) {
+      where.operator_driver_user = {
+        employee_name: { contains: operator }
       };
     }
 
-    if (jobId) {
-      where.job_id = parseInt(jobId);
+    if (fuelMin || fuelMax) {
+      where.quantity_liters = {};
+      if (fuelMin) where.quantity_liters.gte = parseFloat(fuelMin);
+      if (fuelMax) where.quantity_liters.lte = parseFloat(fuelMax);
     }
+
+    // Efficiency is calculated, so filter after fetching if needed
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
@@ -342,6 +361,7 @@ exports.generateFuelUsageReport = async (req, res, next) => {
         date: record.consumption_datetime.toISOString().split('T')[0],
         site: record.sites.site_name,
         vehicle: `${record.vehicles_equipment.type} ${record.vehicles_equipment.plate_number_machine_id}`,
+        plateNumber: record.vehicles_equipment.plate_number_machine_id,
         operator: record.operator_driver_user.employee_name,
         fuelUsed: record.quantity_liters,
         efficiency: efficiency,

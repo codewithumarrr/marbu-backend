@@ -27,6 +27,8 @@ router.use('/invoices', require('./invoices.routes'));
 router.use('/invoice-items', require('./invoice_items.routes'));
 router.use('/audit-log', require('./audit_log.routes'));
 
+router.use('/divisions', require('./divisions.routes'));
+
 // API Health Check
 router.get('/health', (req, res) => {
   res.status(200).json({

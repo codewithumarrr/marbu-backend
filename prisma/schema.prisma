@@ -18,9 +18,11 @@ model users {
   user_picture        String?
   role_id             Int
   site_id             Int?
+  division_id         Int? // Optional: if user belongs to a division
 
   roles                       roles              @relation(fields: [role_id], references: [role_id])
-  sites                       sites?              @relation(fields: [site_id], references: [site_id])
+  sites                       sites?             @relation(fields: [site_id], references: [site_id])
+  divisions                   divisions?         @relation(fields: [division_id], references: [division_id])
   diesel_receiving_received   diesel_receiving[] @relation("received_by_user_id")
   diesel_receiving_created    diesel_receiving[] @relation("created_by_user_id")
   diesel_receiving_updated    diesel_receiving[] @relation("updated_by_user_id")
@@ -38,10 +40,23 @@ model roles {
   users       users[]
 }
 
+model divisions {
+  division_id         Int      @id @default(autoincrement())
+  division_name       String
+  description         String?
+
+  sites               sites[]
+  vehicles_equipment  vehicles_equipment[]
+  users               users[]
+}
+
 model sites {
   site_id           Int                @id @default(autoincrement())
   site_name         String
   location          String
+  division_id       Int?               // New field
+
+  divisions         divisions?          @relation(fields: [division_id], references: [division_id])
   users             users[]
   tanks             tanks[]
   diesel_receiving  diesel_receiving[]
@@ -75,6 +90,9 @@ model vehicles_equipment {
   current_odometer_hours    Float
   current_odometer_kilometer Float
   daily_usage_limit         Float
+  division_id               Int?    // Optional: belongs to a division
+
+  divisions                 divisions? @relation(fields: [division_id], references: [division_id])
   diesel_consumption        diesel_consumption[]
 }
 
@@ -102,9 +120,9 @@ model diesel_receiving {
   updated_at           DateTime
   created_by_user_id   String
   updated_by_user_id   String
-  custom_supplier_name String?   // New: for custom supplier name
-  diesel_rate          Float?    // New: for diesel rate
-  notes                String?   // New: for notes
+  custom_supplier_name String?
+  diesel_rate          Float?
+  notes                String?
 
   sites                sites    @relation(fields: [site_id], references: [site_id])
   tanks                tanks    @relation(fields: [tank_id], references: [tank_id])

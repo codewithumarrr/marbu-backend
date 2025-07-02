@@ -3,6 +3,17 @@ const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 async function main() {
+  // Seed divisions
+  const divisionsData = [
+    { division_name: 'H4', description: 'H4 Division' },
+    { division_name: 'RD', description: 'RD Division' },
+    { division_name: 'HHG', description: 'HHG Division' },
+    { division_name: 'AP', description: 'AP Division' },
+    { division_name: 'ABOUDI', description: 'ABOUDI Division' }
+  ];
+  await prisma.divisions.createMany({ data: divisionsData, skipDuplicates: true });
+  const divisions = await prisma.divisions.findMany();
+
   // Seed roles
   const roles = await prisma.roles.createMany({
     data: [
@@ -15,19 +26,20 @@ async function main() {
     skipDuplicates: true
   });
 
-  // Seed sites
+  // Seed sites (including real tank locations)
   const siteData = [
-    { site_name: 'Alpha Site', location: 'Karachi' },
-    { site_name: 'Beta Site', location: 'Lahore' },
-    { site_name: 'Gamma Site', location: 'Islamabad' }
+    { site_name: 'GRAGE-43', location: 'GRAGE-43', division_id: divisions.find(d => d.division_name === 'H4')?.division_id },
+    { site_name: 'SELIYA', location: 'SELIYA (MRJ-134)', division_id: divisions.find(d => d.division_name === 'RD')?.division_id },
+    { site_name: 'UM SALAL', location: 'UM SALAL (MRJ-150)', division_id: divisions.find(d => d.division_name === 'HHG')?.division_id }
   ];
   await prisma.sites.createMany({ data: siteData, skipDuplicates: true });
   const sites = await prisma.sites.findMany();
 
-  // Seed users (add a Tank In-charge and Site Manager)
+  // Seed users (including real users from data table)
   const roleRecords = await prisma.roles.findMany();
-  const adminPassword = await bcrypt.hash('admin123', 10);
+  const adminPassword = await bcrypt.hash('pmv01', 10);
   const usersData = [
+    // Keep existing admin user
     {
       employee_number: 'EMP001',
       qatar_id_number: 'QID1234567890',
@@ -39,87 +51,128 @@ async function main() {
       role_id: roleRecords.find(r => r.role_name === 'admin').role_id,
       site_id: sites[0].site_id
     },
+    // Real users from data table
     {
-      employee_number: 'EMP002',
-      qatar_id_number: 'QID0987654321',
-      profession: 'Project Manager',
-      user_picture: 'https://example.com/bob.jpg',
-      password_hash: await bcrypt.hash('manager123', 10),
-      employee_name: 'Bob Manager',
-      mobile_number: '03007654321',
-      role_id: roleRecords.find(r => r.role_name === 'site-incharge').role_id,
-      site_id: sites[1].site_id
-    },
-    {
-      employee_number: 'EMP003',
-      qatar_id_number: 'QID1122334455',
-      profession: 'Diesel Keeper',
-      user_picture: 'https://example.com/charlie.jpg',
-      password_hash: await bcrypt.hash('keeper123', 10),
-      employee_name: 'Charlie Keeper',
-      mobile_number: '03009876543',
+      employee_number: '33445',
+      qatar_id_number: '29435629459',
+      profession: 'Diesel Manager',
+      user_picture: null,
+      password_hash: await bcrypt.hash('saleem123', 10),
+      employee_name: 'SALEEM AYAZ',
+      mobile_number: '97455691571',
       role_id: roleRecords.find(r => r.role_name === 'diesel-manager').role_id,
-      site_id: sites[2].site_id
+      site_id: sites.find(s => s.site_name === 'GRAGE-43')?.site_id,
+      division_id: divisions.find(d => d.division_name === 'H4')?.division_id
     },
-    // operator
+    {
+      employee_number: '6122',
+      qatar_id_number: '27405004410',
+      profession: 'Diesel Incharge',
+      user_picture: null,
+      password_hash: await bcrypt.hash('momin123', 10),
+      employee_name: 'MOMIN',
+      mobile_number: '97477792692',
+      role_id: roleRecords.find(r => r.role_name === 'site-incharge').role_id,
+      site_id: sites.find(s => s.site_name === 'GRAGE-43')?.site_id,
+      division_id: divisions.find(d => d.division_name === 'H4')?.division_id
+    },
+    {
+      employee_number: '6608',
+      qatar_id_number: '29605006928',
+      profession: 'Diesel Incharge',
+      user_picture: null,
+      password_hash: await bcrypt.hash('taijul123', 10),
+      employee_name: 'TAIJUL',
+      mobile_number: '97466259651',
+      role_id: roleRecords.find(r => r.role_name === 'site-incharge').role_id,
+      site_id: sites.find(s => s.site_name === 'SELIYA')?.site_id,
+      division_id: divisions.find(d => d.division_name === 'RD')?.division_id
+    },
+    {
+      employee_number: '22376',
+      qatar_id_number: '29758605280',
+      profession: 'Diesel Incharge',
+      user_picture: null,
+      password_hash: await bcrypt.hash('abdullah123', 10),
+      employee_name: 'ABDULLAH',
+      mobile_number: '97474755135',
+      role_id: roleRecords.find(r => r.role_name === 'site-incharge').role_id,
+      site_id: sites.find(s => s.site_name === 'UM SALAL')?.site_id,
+      division_id: divisions.find(d => d.division_name === 'HHG')?.division_id
+    },
+    // Keep some existing sample users
     {
       employee_number: 'EMP004',
       qatar_id_number: 'QID6677889900',
       profession: 'Heavy Equipment Operator',
       user_picture: 'https://example.com/tina.jpg',
-      password_hash: await bcrypt.hash('tank123', 10),
+      password_hash: await bcrypt.hash('operator123', 10),
       employee_name: 'Tina Operator',
       mobile_number: '03009998888',
       role_id: roleRecords.find(r => r.role_name === 'operator').role_id,
-      site_id: sites[0].site_id
+      site_id: sites[0].site_id,
+      division_id: divisions.find(d => d.division_name === 'AP')?.division_id
     },
-    // driver
     {
       employee_number: 'EMP005',
       qatar_id_number: 'QID2233445566',
       profession: 'Truck Driver',
       user_picture: 'https://example.com/sam.jpg',
-      password_hash: await bcrypt.hash('site123', 10),
+      password_hash: await bcrypt.hash('driver123', 10),
       employee_name: 'Sam Driver',
       mobile_number: '03007776666',
       role_id: roleRecords.find(r => r.role_name === 'driver').role_id,
-      site_id: sites[1].site_id
-    },
-    // User with no site
-    {
-      employee_number: 'EMP006',
-      qatar_id_number: 'QID9988776655',
-      profession: 'Guest User',
-      user_picture: null, // Nullable field
-      password_hash: await bcrypt.hash('guest123', 10),
-      employee_name: 'Guest User',
-      mobile_number: '03001112222',
-      role_id: roleRecords.find(r => r.role_name === 'operator').role_id,
-      site_id: null // Nullable site_id
+      site_id: sites[1].site_id,
+      division_id: divisions.find(d => d.division_name === 'ABOUDI')?.division_id
     }
   ];
   await prisma.users.createMany({ data: usersData, skipDuplicates: true });
   const users = await prisma.users.findMany(); // Re-fetch users to get their user_id
 
-  // Seed tanks
+  // Seed tanks (including real tanks from data table)
   const tanksData = [
+    // Keep existing sample tanks
     { tank_name: 'Tank A', capacity_liters: 10000, site_id: sites[0].site_id },
     { tank_name: 'Tank B', capacity_liters: 8000, site_id: sites[1].site_id },
-    { tank_name: 'Tank C', capacity_liters: 12000, site_id: sites[2].site_id }
+    { tank_name: 'Tank C', capacity_liters: 12000, site_id: sites[2].site_id },
+    // Real tanks from data table
+    { 
+      tank_name: 'GRAGE-43 Office', 
+      capacity_liters: 20000, 
+      site_id: sites.find(s => s.site_name === 'GRAGE-43')?.site_id 
+    },
+    { 
+      tank_name: 'GRAGE-43 Tank 2', 
+      capacity_liters: 20000, 
+      site_id: sites.find(s => s.site_name === 'GRAGE-43')?.site_id 
+    },
+    { 
+      tank_name: 'SELIYA Tank (MRJ-134)', 
+      capacity_liters: 20000, 
+      site_id: sites.find(s => s.site_name === 'SELIYA')?.site_id 
+    },
+    { 
+      tank_name: 'UM SALAL Tank (MRJ-150)', 
+      capacity_liters: 100000, 
+      site_id: sites.find(s => s.site_name === 'UM SALAL')?.site_id 
+    }
   ];
   await prisma.tanks.createMany({ data: tanksData, skipDuplicates: true });
   const tanks = await prisma.tanks.findMany();
 
-  // Seed suppliers
+  // Seed suppliers (including Qatar Fuel from data table)
   const suppliersData = [
-    { supplier_name: 'FuelCo', contact_person_name: 'Zara', contact_number: '03111222333', address: 'Karachi' },
-    { supplier_name: 'DieselMart', contact_person_name: 'Ahmed', contact_number: '03212345678', address: 'Lahore' },
-    { supplier_name: 'PetroMax', contact_person_name: 'Sara', contact_number: '03319876543', address: 'Islamabad' }
+    {
+      supplier_name: 'Qatar Fuel (Woqod)',
+      contact_person_name: 'Default',
+      contact_number: '0000000000',
+      address: 'Qatar'
+    }
   ];
   await prisma.suppliers.createMany({ data: suppliersData, skipDuplicates: true });
   const suppliers = await prisma.suppliers.findMany();
 
-  // Seed vehicles_equipment
+  // Seed vehicles_equipment (with division assignments)
   const vehiclesData = [
     {
       plate_number_machine_id: 'ABC-123',
@@ -127,7 +180,8 @@ async function main() {
       make_model: 'Hino 500',
       current_odometer_hours: 1000,
       current_odometer_kilometer: 50000,
-      daily_usage_limit: 300
+      daily_usage_limit: 300,
+      division_id: divisions.find(d => d.division_name === 'H4')?.division_id
     },
     {
       plate_number_machine_id: 'XYZ-789',
@@ -135,7 +189,35 @@ async function main() {
       make_model: 'CAT 320',
       current_odometer_hours: 2000,
       current_odometer_kilometer: 15000,
-      daily_usage_limit: 200
+      daily_usage_limit: 200,
+      division_id: divisions.find(d => d.division_name === 'RD')?.division_id
+    },
+    {
+      plate_number_machine_id: 'DEF-456',
+      type: 'Bulldozer',
+      make_model: 'CAT D6T',
+      current_odometer_hours: 1500,
+      current_odometer_kilometer: 8000,
+      daily_usage_limit: 250,
+      division_id: divisions.find(d => d.division_name === 'HHG')?.division_id
+    },
+    {
+      plate_number_machine_id: 'GHI-789',
+      type: 'Loader',
+      make_model: 'CAT 950M',
+      current_odometer_hours: 800,
+      current_odometer_kilometer: 12000,
+      daily_usage_limit: 180,
+      division_id: divisions.find(d => d.division_name === 'AP')?.division_id
+    },
+    {
+      plate_number_machine_id: 'JKL-012',
+      type: 'Crane',
+      make_model: 'Liebherr LTM 1060',
+      current_odometer_hours: 600,
+      current_odometer_kilometer: 25000,
+      daily_usage_limit: 120,
+      division_id: divisions.find(d => d.division_name === 'ABOUDI')?.division_id
     }
   ];
   await prisma.vehicles_equipment.createMany({ data: vehiclesData, skipDuplicates: true });

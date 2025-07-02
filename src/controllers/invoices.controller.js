@@ -85,30 +85,25 @@ exports.getFilteredInvoices = async (req, res, next) => {
 
     const where = {};
 
+    // Flexible filter logic
+    if (invoiceType) {
+      where.invoice_type = invoiceType;
+    }
+
     if (supplierId) {
-      // For supplier invoices, we'd need to link through invoice_items to consumption records
-      // This is a simplified approach
-      where.invoice_items = {
-        some: {
-          diesel_consumption: {
-            // Add supplier filter logic here if needed
-          }
-        }
-      };
+      where.supplier = supplierId;
     }
 
-    if (dateFrom) {
-      where.invoice_date = {
-        ...where.invoice_date,
-        gte: new Date(dateFrom)
-      };
+    if (dateFrom && !dateTo) {
+      where.invoice_date = { gte: new Date(dateFrom), lte: new Date(dateFrom) };
+    } else if (!dateFrom && dateTo) {
+      where.invoice_date = { gte: new Date(dateTo), lte: new Date(dateTo) };
+    } else if (dateFrom && dateTo) {
+      where.invoice_date = { gte: new Date(dateFrom), lte: new Date(dateTo) };
     }
 
-    if (dateTo) {
-      where.invoice_date = {
-        ...where.invoice_date,
-        lte: new Date(dateTo)
-      };
+    if (status) {
+      where.status = status;
     }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -154,13 +149,14 @@ exports.getFilteredInvoices = async (req, res, next) => {
     // Format invoices for frontend
     const formattedInvoices = invoices.map(invoice => ({
       invoiceNo: invoice.invoice_number,
-      supplier: 'Various', // You might want to determine this from invoice items
+      supplier: invoice.supplier || 'Various',
       date: invoice.invoice_date.toISOString().split('T')[0],
       dueDate: invoice.end_date.toISOString().split('T')[0],
       amount: `QAR ${invoice.total_amount.toFixed(2)}`,
-      status: invoice.total_amount > 0 ? 'Pending' : 'Paid', // Simplified status logic
-      site: invoice.sites.site_name,
-      generatedBy: invoice.generated_by_user.employee_name
+      status: invoice.status || (invoice.total_amount > 0 ? 'Pending' : 'Paid'),
+      site: invoice.sites?.site_name || '',
+      generatedBy: invoice.generated_by_user?.employee_name || '',
+      id: invoice.invoice_id
     }));
 
     res.json({
@@ -279,9 +275,29 @@ exports.getInvoiceById = async (req, res, next) => {
       });
     }
     
+    // Map to include supplier, amount, status, items for frontend
     res.json({
       status: 'success',
-      data: invoice
+      data: {
+        invoice_id: invoice.invoice_id,
+        invoice_number: invoice.invoice_number,
+        supplier: invoice.sites?.site_name || 'N/A',
+        invoice_date: invoice.invoice_date ? invoice.invoice_date.toISOString().split('T')[0] : '',
+        end_date: invoice.end_date ? invoice.end_date.toISOString().split('T')[0] : '',
+        total_amount: invoice.total_amount,
+        status: invoice.status || (invoice.total_amount > 0 ? 'Pending' : 'Paid'),
+        items: Array.isArray(invoice.invoice_items)
+          ? invoice.invoice_items.map(item => ({
+              description: item.diesel_consumption?.vehicles_equipment?.plate_number_machine_id || '',
+              qty: item.quantity_liters,
+              unitPrice: item.rate_per_liter,
+              amount: item.amount
+            }))
+          : [],
+        invoice_items: invoice.invoice_items,
+        sites: invoice.sites,
+        generated_by_user: invoice.generated_by_user
+      }
     });
   } catch (error) {
     next(error);
@@ -433,3 +449,4 @@ exports.generateInvoiceFromConsumption = async (req, res, next) => {
     next(error);
   }
 };
+

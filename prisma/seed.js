@@ -56,6 +56,7 @@ async function main() {
   const adminPassword = await bcrypt.hash('pmv01', 10);
   const usersData = [
     {
+      
       employee_number: 'EMP001',
       qatar_id_number: 'QID1234567890',
       profession: 'Software Engineer',

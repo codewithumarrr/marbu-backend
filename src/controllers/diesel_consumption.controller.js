@@ -17,8 +17,20 @@ exports.createFuelConsumption = async (req, res, next) => {
       quantity,
       odometerReading,
       thumbprintData,
-      siteId
+      siteId,
+      webauthnResponse
     } = req.body;
+
+    // Validate WebAuthn response if present
+    if (thumbprintData === 'webauthn' && webauthnResponse) {
+      const verification = await verifyAuthenticationResponse(webauthnResponse);
+      if (!verification.verified) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'WebAuthn authentication verification failed'
+        });
+      }
+    }
 
     // Find the vehicle/equipment record
     const vehicleEquipment = await prisma.vehicles_equipment.findFirst({
@@ -58,7 +70,12 @@ exports.createFuelConsumption = async (req, res, next) => {
         job_id: job.job_id,
         operator_driver_user_id: employeeNumber,
         odometer_km_hours: parseFloat(odometerReading),
-        signature_image_path: thumbprintData || '', // Store thumbprint data
+        signature_image_path: thumbprintData === 'webauthn' ? 
+          `webauthn:${webauthnResponse.id}` : 
+          thumbprintData || '', // Store thumbprint or WebAuthn ID
+        webauthn_response: thumbprintData === 'webauthn' ?
+          JSON.stringify(webauthnResponse) :
+          null, // Store full WebAuthn response
         created_at: new Date(),
         updated_at: new Date(),
         created_by_user_id: employeeNumber,
